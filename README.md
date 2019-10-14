@@ -1,3 +1,5 @@
 # hexSerial
-hex Serial Terminal util
+
+Gui hex Serial Terminal util (Qt release)
+
 
