@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>png/main.png</file>
+	<file>png/connect.png</file>
+	<file>png/help.png</file>
+	<file>png/info.png</file>
+	<file>png/settings.png</file>
+	<file>png/salara.png</file>
+	<file>png/close.png</file>
+	<file>png/con.png</file>
+	<file>png/dis.png</file>
+	<file>png/show.png</file>
+	<file>png/hide.png</file>
+	<file>png/clear.png</file>
+    </qresource>
+</RCC>
