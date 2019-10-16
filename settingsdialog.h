@@ -54,7 +54,6 @@
 
 #include <QDialog>
 #include <QSerialPort>
-#include <QSerialPortInfo>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,11 +94,14 @@ private slots:
     void apply();
     void checkCustomBaudRatePolicy(int idx);
     void checkCustomDevicePathPolicy(int idx);
+    void updateSettings();
 
 private:
     void fillPortsParameters();
     void fillPortsInfo();
-    void updateSettings();
+
+signals:
+    void sigUpdate();
 
 private:
     Ui::SettingsDialog *m_ui = nullptr;

@@ -13,11 +13,19 @@
 //const QString vers = "0.1";//10.10.2019
 //const QString vers = "0.2";//11.10.2019
 //const QString vers = "0.3";//12.10.2019
-const QString vers = "0.4";//14.10.2019
+//const QString vers = "0.4";//14.10.2019
+const QString vers = "0.5";//16.10.2019
 
 
 const QString title = "hexSerialTerminal";
 
+const QString main_pic    = "png/main.png";
+const QString con_pic     = "png/con.png";
+const QString dis_pic     = "png/dis.png";
+const QString salara_pic  = "png/salara.png";
+const QString hide_pic    = "png/hide.png";
+const QString show_pic    = "png/show.png";
+const QString close_pic   = "png/close.png";
 
 //******************************************************************************************************
 
@@ -32,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         throw TheError(MyError);
     }
 
-    this->setWindowIcon(QIcon("png/main.png"));
+    this->setWindowIcon(QIcon(main_pic));
 
     this->setWindowOpacity(0.90);//set the level of transparency
 
@@ -68,7 +76,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->actionDISCONNECT->setEnabled(false);
 
     ui->status->clear();
-    ui->pic->setPixmap(QPixmap(":png/dis.png"));
+    ui->pic->setPixmap(QPixmap(dis_pic));
 
 }
 //-----------------------------------------------------------------------
@@ -146,7 +154,7 @@ void MainWindow::About()
 
     QMessageBox box;
     box.setStyleSheet("background-color: rgb(208, 208, 208);");
-    box.setIconPixmap(QPixmap(":png/salara.png"));
+    box.setIconPixmap(QPixmap(salara_pic));
     box.setText(st);
     box.setWindowTitle("About");
     box.exec();
@@ -189,7 +197,7 @@ void MainWindow::on_connect_clicked()
                           .arg(conf->settings().stringParity.at(0))
                           .arg(conf->settings().stringStopBits)
                           .arg(conf->settings().stringFlowControl));
-        ui->pic->setPixmap(QPixmap(":png/con.png"));
+        ui->pic->setPixmap(QPixmap(con_pic));
 
         ui->connect->setEnabled(false);
         ui->disconnect->setEnabled(true);
@@ -201,7 +209,7 @@ void MainWindow::on_connect_clicked()
     } else {
         ui->status->clear();
         ui->status->setText("Serial port " + sdevName + " open ERROR");
-        ui->pic->setPixmap(QPixmap(":png/dis.png"));
+        ui->pic->setPixmap(QPixmap(dis_pic));
 
         deinitSerial();
     }
@@ -213,7 +221,7 @@ void MainWindow::on_disconnect_clicked()
 
     deinitSerial();
 
-    ui->pic->setPixmap(QPixmap(":png/dis.png"));
+    ui->pic->setPixmap(QPixmap(dis_pic));
     ui->status->clear();
 
     ui->connect->setEnabled(true);
@@ -365,7 +373,7 @@ void MainWindow::slotError(QSerialPort::SerialPortError serialPortError)
 void MainWindow::showTrayIcon()
 {
     trayIcon = new QSystemTrayIcon(this);
-    QIcon trayImage("png/main.png");
+    QIcon trayImage(main_pic);
     trayIcon->setIcon(trayImage);
     trayIcon->setContextMenu(trayIconMenu);
 
@@ -392,9 +400,9 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 //-------------------------------------------------------------------------------------
 void MainWindow::setTrayIconActions()
 {
-    minA  = new QAction(QIcon("png/hide.png"), "Hide", this);
-    maxA  = new QAction(QIcon("png/show.png"), "Show", this);
-    quitA = new QAction(QIcon("png/close.png"),"Quit", this);
+    minA  = new QAction(QIcon(hide_pic), "Hide", this);
+    maxA  = new QAction(QIcon(show_pic), "Show", this);
+    quitA = new QAction(QIcon(close_pic),"Quit", this);
 
 
     connect(minA, SIGNAL(triggered()),  this, SLOT(hide()));
