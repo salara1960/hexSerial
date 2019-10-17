@@ -14,13 +14,14 @@
 //const QString vers = "0.2";//11.10.2019
 //const QString vers = "0.3";//12.10.2019
 //const QString vers = "0.4";//14.10.2019
-const QString vers = "0.5";//16.10.2019
+//const QString vers = "0.5";//16.10.2019
+const QString vers = "0.5.1";//17.10.2019
 
 
 const QString title = "hexSerialTerminal";
 
 const QString main_pic    = "png/main.png";
-const QString con_pic     = "png/con.png";
+const QString con_pic     = "png/conn.png";
 const QString dis_pic     = "png/dis.png";
 const QString salara_pic  = "png/salara.png";
 const QString hide_pic    = "png/hide.png";
@@ -287,7 +288,7 @@ void MainWindow::on_eot_clicked()
 //-----------------------------------------------------------------------
 void MainWindow::on_answer_clicked()
 {
-//0x02, 0x55, 0x00, 0x00, 0x03, 0x56
+//02 55 00 00 03 56
 //02 55 00 a0 03 f6
 
     QByteArray sb(ui->stx->text().toLocal8Bit());

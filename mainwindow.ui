@@ -487,7 +487,7 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
      <x>0</x>
      <y>0</y>
      <width>761</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuACTION">
@@ -538,7 +538,7 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
   <action name="actionCONNECT">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/png/con.png</normaloff>:/png/con.png</iconset>
+     <normaloff>:/png/conn.png</normaloff>:/png/conn.png</iconset>
    </property>
    <property name="text">
     <string>Connect</string>

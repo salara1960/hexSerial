@@ -163,7 +163,7 @@ void SettingsDialog::fillPortsParameters()
     m_ui->parityBox->addItem(tr("Space"), QSerialPort::SpaceParity);
 
     m_ui->stopBitsBox->addItem(QStringLiteral("1"), QSerialPort::OneStop);
-#ifdef Q_OS_WIN
+#ifdef __WIN32
     m_ui->stopBitsBox->addItem(tr("1.5"), QSerialPort::OneAndHalfStop);
 #endif
     m_ui->stopBitsBox->addItem(QStringLiteral("2"), QSerialPort::TwoStop);

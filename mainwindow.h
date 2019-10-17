@@ -3,12 +3,17 @@
 
 #include <inttypes.h>
 #include <iostream>
-#include <arpa/inet.h>
 #include <time.h>
-#include <endian.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef __WIN32
+#include <windows.h>
+#else
+#include <arpa/inet.h>
+#include <endian.h>
+#endif
 
 #include <QApplication>
 #include <QMainWindow>
@@ -21,8 +26,6 @@
 #include <QDateTime>
 #include <QSerialPort>
 #include <QSerialPortInfo>
-//#include <QtSerialPort/QSerialPort>
-//#include <QtSerialPort/QSerialPortInfo>
 #include <QDebug>
 #include <QMessageBox>
 #include <QPixmap>
