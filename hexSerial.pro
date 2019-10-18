@@ -28,15 +28,18 @@ TEMPLATE = app
 #CONFIG += c++14
 
 SOURCES += \
+        itDialog.cpp \
         main.cpp \
         mainwindow.cpp \
         settingsdialog.cpp
 
 HEADERS += \
+        itDialog.h \
         mainwindow.h \
         settingsdialog.h
 
 FORMS += \
+        itDialog.ui \
         mainwindow.ui \
         settingsdialog.ui
 

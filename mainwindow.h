@@ -32,6 +32,7 @@
 #include <QCheckBox>
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
+#include <QEvent>
 
 
 //********************************************************************************
@@ -49,6 +50,14 @@
 #define NAK  0x15
 #define ESC  0x1B
 
+#define keyCnt 4
+
+typedef enum {
+    KEY_ACK = 0,
+    KEY_NAK,
+    KEY_ENQ,
+    KEY_EOT
+} keys_t;
 
 //********************************************************************************
 
@@ -57,6 +66,7 @@ class MainWindow;
 }
 
 class SettingsDialog;
+class pwdDialog;
 
 //********************************************************************************
 class MainWindow : public QMainWindow
@@ -75,7 +85,14 @@ public:
     ~MainWindow();
     void timerEvent(QTimerEvent *event);
 
+
+//protected:
+//    virtual void mousePressEvent(QMouseEvent *);
+
 public slots:
+//    void selectKeyData();
+    void slotButtonData();
+    void KeyProg(QByteArray);
     int initSerial();
     void deinitSerial();
     void LogSave(const char *, const QByteArray &, bool, bool);
@@ -111,6 +128,7 @@ private slots:
 signals:
     void sigWrite(QByteArray &);
     void sigAbout();
+    void sigButtonData();
 
 private:
     Ui::MainWindow *ui;
@@ -119,6 +137,13 @@ private:
     QByteArray rxData, txData;
     QString sdevName, sdevConf;
     bool hex, first, con;
+    //KeyProg
+    int keyId;
+    QByteArray keyArr;
+    pwdDialog *keys;
+    QPushButton *keyAdr[keyCnt];
+    const QString keyName[keyCnt] = {"ACK", "NAK", "ENQ", "EOT"};
+    const char defKeys[keyCnt] = {ACK, NAK, ENQ, EOT};
     //settings
     SettingsDialog *conf = nullptr;
     //tray

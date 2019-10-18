@@ -12,5 +12,6 @@
 	<file>png/show.png</file>
 	<file>png/hide.png</file>
 	<file>png/clear.png</file>
+	<file>png/button.png</file>
     </qresource>
 </RCC>

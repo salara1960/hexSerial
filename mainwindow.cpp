@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "settingsdialog.h"
+#include "itDialog.h"
 
 
 
@@ -10,12 +11,15 @@
 //
 //******************************************************************************************************
 
+
 //const QString vers = "0.1";//10.10.2019
 //const QString vers = "0.2";//11.10.2019
 //const QString vers = "0.3";//12.10.2019
 //const QString vers = "0.4";//14.10.2019
 //const QString vers = "0.5";//16.10.2019
-const QString vers = "0.5.1";//17.10.2019
+//const QString vers = "0.5.1";//17.10.2019
+//const QString vers = "0.5.2";//17.10.2019
+const QString vers = "0.6";//18.10.2019
 
 
 const QString title = "hexSerialTerminal";
@@ -27,6 +31,7 @@ const QString salara_pic  = "png/salara.png";
 const QString hide_pic    = "png/hide.png";
 const QString show_pic    = "png/show.png";
 const QString close_pic   = "png/close.png";
+
 
 //******************************************************************************************************
 
@@ -79,15 +84,58 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->status->clear();
     ui->pic->setPixmap(QPixmap(dis_pic));
 
+    keyId = 0;
+    keys = nullptr;
+    keyAdr[keyId] = ui->ack; keyId++;
+    keyAdr[keyId] = ui->nak; keyId++;
+    keyAdr[keyId] = ui->enq; keyId++;
+    keyAdr[keyId] = ui->eot;
+    keyArr.clear();
+    for (int i = 0; i < keyCnt; ++i) {
+        keyArr.append(defKeys[i]);
+        keyAdr[i]->setToolTip("0x" + QString::number(keyArr.at(i), 16));
+    }
+
+    connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
+
 }
 //-----------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
     deinitSerial();
     if (conf) delete conf;
+    if (keys) delete keys;
 
     killTimer(tmr_sec);
     delete ui;
+}
+//--------------------------------------------------------------------------------
+void MainWindow::KeyProg(QByteArray bt)
+{
+    if (keyId < keyCnt) {
+        QByteArray tmp; tmp.clear();
+        hexTobin(bt.data(), &tmp);
+        if (tmp.length()) {
+            keyArr[keyId] = tmp.at(0);
+            keyAdr[keyId]->setToolTip("0x" + tmp.toHex(' '));
+        }
+    }
+    if (keys) { delete keys; keys = nullptr; }
+}
+//--------------------------------------------------------------------------------
+void MainWindow::slotButtonData()
+{
+    if (keyId < keyCnt) {
+        QString from(keyName[keyId] + " key programming");
+
+        if (keys) { delete keys; keys = nullptr; }
+        QByteArray tmp; tmp.append(keyArr[keyId]);
+        keys = new pwdDialog(nullptr, from, tmp);
+        if (keys) {
+            connect(keys, SIGNAL(DoneW(QByteArray)), this, SLOT(KeyProg(QByteArray)));
+            keys->show();
+        }
+    }
 }
 //--------------------------------------------------------------------------------
 
@@ -252,38 +300,58 @@ void MainWindow::slotWrite(QByteArray & mas)
 //-----------------------------------------------------------------------
 void MainWindow::on_ack_clicked()
 {
-    QByteArray m;
-    m.clear();
-    m[0] = ACK;
-    hex = true;
-    emit sigWrite(m);
+    if (sdev) {
+        QByteArray m;
+        m.clear();
+        m[0] = ACK;
+        hex = true;
+        emit sigWrite(m);
+    } else {
+        keyId = KEY_ACK;
+        emit sigButtonData();
+    }
 }
 //-----------------------------------------------------------------------
 void MainWindow::on_nak_clicked()
 {
-    QByteArray m;
-    m.clear();
-    m[0] = NAK;
-    hex = true;
-    emit sigWrite(m);
+    if (sdev) {
+        QByteArray m;
+        m.clear();
+        m[0] = NAK;
+        hex = true;
+        emit sigWrite(m);
+    } else {
+        keyId = KEY_NAK;
+        emit sigButtonData();
+    }
 }
 //-----------------------------------------------------------------------
 void MainWindow::on_enq_clicked()
 {
-    QByteArray m;
-    m.clear();
-    m[0] = ENQ;
-    hex = true;
-    emit sigWrite(m);
+    if (sdev) {
+        QByteArray m;
+        m.clear();
+        m[0] = ENQ;
+        hex = true;
+        emit sigWrite(m);
+    } else {
+        keyId = KEY_ENQ;
+        emit sigButtonData();
+    }
 }
 //-----------------------------------------------------------------------
 void MainWindow::on_eot_clicked()
 {
-    QByteArray m;
-    m.clear();
-    m[0] = EOT;
-    hex = true;
-    emit sigWrite(m);
+    if (sdev) {
+        QByteArray m;
+        m.clear();
+        m[0] = EOT;
+        hex = true;
+        emit sigWrite(m);
+    } else {
+        keyId = KEY_EOT;
+        emit sigButtonData();
+    }
 }
 //-----------------------------------------------------------------------
 void MainWindow::on_answer_clicked()
