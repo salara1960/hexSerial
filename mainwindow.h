@@ -32,12 +32,14 @@
 #include <QCheckBox>
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
-#include <QEvent>
+#include <QMouseEvent>
 
 
 //********************************************************************************
 
 #define SET_DEBUG
+#define SET_MOUSE_KEY
+
 
 #define max_buf 2048
 
@@ -51,6 +53,7 @@
 #define ESC  0x1B
 
 #define keyCnt 4
+#define sendkeyCnt 6
 
 typedef enum {
     KEY_ACK = 0,
@@ -85,12 +88,12 @@ public:
     ~MainWindow();
     void timerEvent(QTimerEvent *event);
 
-
-//protected:
-//    virtual void mousePressEvent(QMouseEvent *);
+#ifdef SET_MOUSE_KEY
+protected:
+    virtual void mousePressEvent(QMouseEvent *);
+#endif
 
 public slots:
-//    void selectKeyData();
     void slotButtonData();
     void KeyProg(QByteArray);
     int initSerial();
@@ -109,7 +112,11 @@ public slots:
     void trayActionExecute();
     void setTrayIconActions();
     void showTrayIcon();
-    //
+
+#ifdef SET_MOUSE_KEY
+    //Press mouse button
+    void slotRM(int, int);
+#endif
 
 private slots:
     void ReadData();
@@ -130,6 +137,10 @@ signals:
     void sigAbout();
     void sigButtonData();
 
+#ifdef SET_MOUSE_KEY
+    void sigRM(int, int);
+#endif
+
 private:
     Ui::MainWindow *ui;
     int tmr_sec, MyError;
@@ -139,11 +150,12 @@ private:
     bool hex, first, con;
     //KeyProg
     int keyId;
-    QByteArray keyArr;
+    QByteArray keyArr[keyCnt];
     pwdDialog *keys;
     QPushButton *keyAdr[keyCnt];
     const QString keyName[keyCnt] = {"ACK", "NAK", "ENQ", "EOT"};
     const char defKeys[keyCnt] = {ACK, NAK, ENQ, EOT};
+    const char defSendKeys[sendkeyCnt] = {STX, 0x55, 0x00, 0x00, ETX, 0x56};//(02 55 00 a0 03 f6}
     //settings
     SettingsDialog *conf = nullptr;
     //tray

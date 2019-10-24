@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>227</width>
-    <height>170</height>
+    <width>241</width>
+    <height>126</height>
    </rect>
   </property>
   <property name="font">
@@ -30,33 +30,7 @@
    <string notr="true">background-color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, stop:0 rgba(25, 25, 25, 255), stop:1 rgba(255, 255, 255, 255));</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="1">
-    <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>17</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="0">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>61</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="1">
+   <item row="0" column="0" colspan="3">
     <widget class="QLineEdit" name="line">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -66,49 +40,44 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>70</width>
+       <width>220</width>
        <height>40</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>70</width>
+       <width>220</width>
        <height>40</height>
       </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
      </property>
      <property name="styleSheet">
       <string notr="true">background-color: rgb(255, 255, 255);
 border-color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, stop:0 rgba(25, 25, 25, 255), stop:1 rgba(255, 255, 255, 255));</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
     </widget>
    </item>
-   <item row="1" column="2">
-    <spacer name="horizontalSpacer_2">
+   <item row="1" column="0">
+    <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>60</width>
-       <height>20</height>
+       <width>54</width>
+       <height>48</height>
       </size>
      </property>
     </spacer>
    </item>
-   <item row="2" column="0" colspan="3">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>206</width>
-       <height>24</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="3" column="1">
+   <item row="1" column="1">
     <widget class="QPushButton" name="but_ok">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -118,13 +87,13 @@ border-color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.3
      </property>
      <property name="minimumSize">
       <size>
-       <width>70</width>
+       <width>80</width>
        <height>40</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>70</width>
+       <width>80</width>
        <height>40</height>
       </size>
      </property>
@@ -154,6 +123,19 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb
       <string>OK</string>
      </property>
     </widget>
+   </item>
+   <item row="1" column="2">
+    <spacer name="horizontalSpacer_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>59</width>
+       <height>48</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

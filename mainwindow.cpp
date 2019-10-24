@@ -19,7 +19,8 @@
 //const QString vers = "0.5";//16.10.2019
 //const QString vers = "0.5.1";//17.10.2019
 //const QString vers = "0.5.2";//17.10.2019
-const QString vers = "0.6";//18.10.2019
+//const QString vers = "0.6";//18.10.2019
+const QString vers = "0.7";//24.10.2019
 
 
 const QString title = "hexSerialTerminal";
@@ -90,13 +91,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     keyAdr[keyId] = ui->nak; keyId++;
     keyAdr[keyId] = ui->enq; keyId++;
     keyAdr[keyId] = ui->eot;
-    keyArr.clear();
     for (int i = 0; i < keyCnt; ++i) {
-        keyArr.append(defKeys[i]);
-        keyAdr[i]->setToolTip("0x" + QString::number(keyArr.at(i), 16));
+        keyArr[i].clear();
+        keyArr[i].append(defKeys[i]);
+        keyAdr[i]->setToolTip("0x" + QString::number(keyArr[i].at(0), 16));
     }
-
+    //
+    QByteArray stz; stz.append(defSendKeys, sendkeyCnt);
+    ui->stx->setText(stz.toHex());
+    ui->hexBox->setCheckState(Qt::Checked);
+    ui->stx->setEnabled(false);
+    ui->hexBox->setEnabled(false);
+    //
     connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
+
+#ifdef SET_MOUSE_KEY
+    connect(this, &MainWindow::sigRM, this, &MainWindow::slotRM);
+#endif
 
 }
 //-----------------------------------------------------------------------
@@ -116,8 +127,8 @@ void MainWindow::KeyProg(QByteArray bt)
         QByteArray tmp; tmp.clear();
         hexTobin(bt.data(), &tmp);
         if (tmp.length()) {
-            keyArr[keyId] = tmp.at(0);
-            keyAdr[keyId]->setToolTip("0x" + tmp.toHex(' '));
+            keyArr[keyId] = tmp;
+            keyAdr[keyId]->setToolTip(tmp.toHex(' '));
         }
     }
     if (keys) { delete keys; keys = nullptr; }
@@ -255,6 +266,9 @@ void MainWindow::on_connect_clicked()
         ui->actionCONNECT->setEnabled(false);
         ui->actionPORT->setEnabled(false);
         ui->actionDISCONNECT->setEnabled(true);
+
+        ui->stx->setEnabled(true);
+        ui->hexBox->setEnabled(true);
     } else {
         ui->status->clear();
         ui->status->setText("Serial port " + sdevName + " open ERROR");
@@ -280,6 +294,9 @@ void MainWindow::on_disconnect_clicked()
     con = false;
     ui->actionCONNECT->setEnabled(true);
     ui->actionDISCONNECT->setEnabled(false);
+
+    ui->stx->setEnabled(false);
+    ui->hexBox->setEnabled(false);
 }
 //-----------------------------------------------------------------------
 void MainWindow::slotWrite(QByteArray & mas)
@@ -301,9 +318,7 @@ void MainWindow::slotWrite(QByteArray & mas)
 void MainWindow::on_ack_clicked()
 {
     if (sdev) {
-        QByteArray m;
-        m.clear();
-        m[0] = ACK;
+        QByteArray m(keyArr[KEY_ACK]);
         hex = true;
         emit sigWrite(m);
     } else {
@@ -315,9 +330,7 @@ void MainWindow::on_ack_clicked()
 void MainWindow::on_nak_clicked()
 {
     if (sdev) {
-        QByteArray m;
-        m.clear();
-        m[0] = NAK;
+        QByteArray m(keyArr[KEY_NAK]);
         hex = true;
         emit sigWrite(m);
     } else {
@@ -329,9 +342,7 @@ void MainWindow::on_nak_clicked()
 void MainWindow::on_enq_clicked()
 {
     if (sdev) {
-        QByteArray m;
-        m.clear();
-        m[0] = ENQ;
+        QByteArray m(keyArr[KEY_ENQ]);
         hex = true;
         emit sigWrite(m);
     } else {
@@ -343,9 +354,7 @@ void MainWindow::on_enq_clicked()
 void MainWindow::on_eot_clicked()
 {
     if (sdev) {
-        QByteArray m;
-        m.clear();
-        m[0] = EOT;
+        QByteArray m(keyArr[KEY_EOT]);
         hex = true;
         emit sigWrite(m);
     } else {
@@ -503,6 +512,26 @@ void MainWindow::closeEvent(QCloseEvent *evt)
 }
 //**************************************************************************************
 
+#ifdef SET_MOUSE_KEY
+//-------------------------------------------------------------------------------------
+void MainWindow::slotRM(int x, int y)
+{
+    QMessageBox::information(this, "Mouse key", "\nX,Y = " + QString::number(x, 10) + "," + QString::number(y, 10) + "\n");
+}
+//-------------------------------------------------------------------------------------
+void MainWindow::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::RightButton) {
+        e->accept();
+        //emit sigRM(e->pos().x(), e->pos().y());
+        QMessageBox::information(this, "Right key", "\nX,Y = " + QString::number(e->pos().x(), 10) + "," + QString::number(e->pos().y(), 10) + "\n");
+    } else if (e->button() == Qt::MiddleButton) {
+        e->accept();
+        QMessageBox::information(this, "Middle key", "\nX,Y = " + QString::number(e->pos().x(), 10) + "," + QString::number(e->pos().y(), 10) + "\n");
+        //emit sigRM(e->pos().x(), e->pos().y());
+    }
+}
+#endif
 
 
 
