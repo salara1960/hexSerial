@@ -20,7 +20,8 @@
 //const QString vers = "0.5.1";//17.10.2019
 //const QString vers = "0.5.2";//17.10.2019
 //const QString vers = "0.6";//18.10.2019
-const QString vers = "0.7";//24.10.2019
+//const QString vers = "0.7";//24.10.2019
+const QString vers = "0.7.1";//25.10.2019
 
 
 const QString title = "hexSerialTerminal";
