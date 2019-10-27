@@ -13,5 +13,7 @@
 	<file>png/hide.png</file>
 	<file>png/clear.png</file>
 	<file>png/button.png</file>
+	<file>png/eyeShow.png</file>
+	<file>png/eyeHide.png</file>
     </qresource>
 </RCC>

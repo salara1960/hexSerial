@@ -21,7 +21,9 @@
 //const QString vers = "0.5.2";//17.10.2019
 //const QString vers = "0.6";//18.10.2019
 //const QString vers = "0.7";//24.10.2019
-const QString vers = "0.7.1";//25.10.2019
+//const QString vers = "0.7.1";//25.10.2019
+const QString vers = "0.7.2";//27.10.2019
+
 
 
 const QString title = "hexSerialTerminal";
@@ -30,8 +32,8 @@ const QString main_pic    = "png/main.png";
 const QString con_pic     = "png/conn.png";
 const QString dis_pic     = "png/dis.png";
 const QString salara_pic  = "png/salara.png";
-const QString hide_pic    = "png/hide.png";
-const QString show_pic    = "png/show.png";
+const QString hide_pic    = "png/eyeHide.png";
+const QString show_pic    = "png/eyeShow.png";
 const QString close_pic   = "png/close.png";
 
 
