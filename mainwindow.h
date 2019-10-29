@@ -131,8 +131,8 @@ private slots:
     void on_answer_clicked();
     void on_any_clicked();
 
-    void on_connect_clicked();
-    void on_disconnect_clicked();
+    void on_connect();
+    void on_disconnect();
 
     void slotWrite(QByteArray &);
 
@@ -140,6 +140,8 @@ signals:
     void sigWrite(QByteArray &);
     void sigAbout();
     void sigButtonData();
+    void sigConn();
+    void sigDisc();
 
 #ifdef SET_MOUSE_KEY
     void sigRM(int, int);

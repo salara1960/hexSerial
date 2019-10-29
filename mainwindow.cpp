@@ -73,9 +73,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     //Menu
     connect(ui->actionVERSION,    &QAction::triggered, this, &MainWindow::About);
     connect(ui->actionPORT,       &QAction::triggered, conf, &SettingsDialog::show);
-    connect(ui->actionCONNECT,    &QAction::triggered, this, &MainWindow::on_connect_clicked);
-    connect(ui->actionDISCONNECT, &QAction::triggered, this, &MainWindow::on_disconnect_clicked);
+    connect(ui->actionCONNECT,    &QAction::triggered, this, &MainWindow::on_connect);
+    connect(ui->actionDISCONNECT, &QAction::triggered, this, &MainWindow::on_disconnect);
     connect(ui->actionCLEAR,      &QAction::triggered, this, &MainWindow::clrLog);
+
+    connect(this, &MainWindow::sigConn, this, &MainWindow::on_connect);
+    connect(this, &MainWindow::sigDisc, this, &MainWindow::on_disconnect);
 
     ui->actionCONNECT->setEnabled(true);
     ui->actionPORT->setEnabled(true);
@@ -242,7 +245,7 @@ void MainWindow::LogSave(const char *func, const QByteArray & st, bool rxd, bool
     ui->log->append(fw);//to log screen
 }
 //-----------------------------------------------------------------------
-void MainWindow::on_connect_clicked()
+void MainWindow::on_connect()
 {
     if (con) return;
 
@@ -272,7 +275,7 @@ void MainWindow::on_connect_clicked()
     }
 }
 //-----------------------------------------------------------------------
-void MainWindow::on_disconnect_clicked()
+void MainWindow::on_disconnect()
 {
     if (!con) return;
 
@@ -454,10 +457,11 @@ void MainWindow::slotError(QSerialPort::SerialPortError serialPortError)
 //**************************************************************************************
 void MainWindow::showTrayIcon()
 {
+    trayIcon = new QSystemTrayIcon(this);
     QIcon trayImage(main_pic);
-    trayIcon = new QSystemTrayIcon(trayImage, this);
+    trayIcon->setIcon(trayImage);
     trayIcon->setContextMenu(trayIconMenu);
-    //trayIcon->setToolTip("hexSerial");
+
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
                 this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 
