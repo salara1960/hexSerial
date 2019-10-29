@@ -22,8 +22,8 @@
 //const QString vers = "0.6";//18.10.2019
 //const QString vers = "0.7";//24.10.2019
 //const QString vers = "0.7.1";//25.10.2019
-const QString vers = "0.7.2";//27.10.2019
-
+//const QString vers = "0.7.2";//27.10.2019
+const QString vers = "0.8";//29.10.2019
 
 
 const QString title = "hexSerialTerminal";
@@ -77,23 +77,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->actionDISCONNECT, &QAction::triggered, this, &MainWindow::on_disconnect_clicked);
     connect(ui->actionCLEAR,      &QAction::triggered, this, &MainWindow::clrLog);
 
-
-    ui->disconnect->setEnabled(false);
-    ui->connect->setEnabled(true);
-
     ui->actionCONNECT->setEnabled(true);
     ui->actionPORT->setEnabled(true);
     ui->actionDISCONNECT->setEnabled(false);
 
     ui->status->clear();
-    ui->pic->setPixmap(QPixmap(dis_pic));
 
     keyId = 0;
     keys = nullptr;
     keyAdr[keyId] = ui->ack; keyId++;
     keyAdr[keyId] = ui->nak; keyId++;
     keyAdr[keyId] = ui->enq; keyId++;
-    keyAdr[keyId] = ui->eot;
+    keyAdr[keyId] = ui->eot; keyId++;
+    keyAdr[keyId] = ui->any;
     for (int i = 0; i < keyCnt; ++i) {
         keyArr[i].clear();
         keyArr[i].append(defKeys[i]);
@@ -260,10 +256,6 @@ void MainWindow::on_connect_clicked()
                           .arg(conf->settings().stringParity.at(0))
                           .arg(conf->settings().stringStopBits)
                           .arg(conf->settings().stringFlowControl));
-        ui->pic->setPixmap(QPixmap(con_pic));
-
-        ui->connect->setEnabled(false);
-        ui->disconnect->setEnabled(true);
 
         con = true;
         ui->actionCONNECT->setEnabled(false);
@@ -275,7 +267,6 @@ void MainWindow::on_connect_clicked()
     } else {
         ui->status->clear();
         ui->status->setText("Serial port " + sdevName + " open ERROR");
-        ui->pic->setPixmap(QPixmap(dis_pic));
 
         deinitSerial();
     }
@@ -287,12 +278,10 @@ void MainWindow::on_disconnect_clicked()
 
     deinitSerial();
 
-    ui->pic->setPixmap(QPixmap(dis_pic));
     ui->status->clear();
+    ui->status->setText("Disconnect from serial port " + sdevName);
 
-    ui->connect->setEnabled(true);
     ui->actionPORT->setEnabled(true);
-    ui->disconnect->setEnabled(false);
 
     con = false;
     ui->actionCONNECT->setEnabled(true);
@@ -386,6 +375,18 @@ void MainWindow::on_answer_clicked()
     if (tmp.length()) emit sigWrite(tmp);
 
 }
+//-----------------------------------------------------------------------
+void MainWindow::on_any_clicked()
+{
+    if (sdev) {
+        QByteArray m(keyArr[KEY_KEY]);
+        hex = true;
+        emit sigWrite(m);
+    } else {
+        keyId = KEY_KEY;
+        emit sigButtonData();
+    }
+}
 //------------------------------------------------------------------------------------
 unsigned char MainWindow::myhextobin(const char *uk)
 {
@@ -453,15 +454,15 @@ void MainWindow::slotError(QSerialPort::SerialPortError serialPortError)
 //**************************************************************************************
 void MainWindow::showTrayIcon()
 {
-    trayIcon = new QSystemTrayIcon(this);
     QIcon trayImage(main_pic);
-    trayIcon->setIcon(trayImage);
+    trayIcon = new QSystemTrayIcon(trayImage, this);
     trayIcon->setContextMenu(trayIconMenu);
-
+    //trayIcon->setToolTip("hexSerial");
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
                 this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 
     trayIcon->show();
+    trayIcon->setToolTip("hexSerial");
 }
 //-------------------------------------------------------------------------------------
 void MainWindow::trayActionExecute()

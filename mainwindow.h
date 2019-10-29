@@ -51,15 +51,18 @@
 #define DLE  0x10
 #define NAK  0x15
 #define ESC  0x1B
+#define LF   0x0A
+#define CR   0x0D
 
-#define keyCnt 4
+#define keyCnt 5
 #define sendkeyCnt 6
 
 typedef enum {
     KEY_ACK = 0,
     KEY_NAK,
     KEY_ENQ,
-    KEY_EOT
+    KEY_EOT,
+    KEY_KEY
 } keys_t;
 
 //********************************************************************************
@@ -126,6 +129,7 @@ private slots:
     void on_enq_clicked();
     void on_eot_clicked();
     void on_answer_clicked();
+    void on_any_clicked();
 
     void on_connect_clicked();
     void on_disconnect_clicked();
@@ -153,8 +157,8 @@ private:
     QByteArray keyArr[keyCnt];
     pwdDialog *keys;
     QPushButton *keyAdr[keyCnt];
-    const QString keyName[keyCnt] = {"ACK", "NAK", "ENQ", "EOT"};
-    const char defKeys[keyCnt] = {ACK, NAK, ENQ, EOT};
+    const QString keyName[keyCnt] = {"ACK", "NAK", "ENQ", "EOT", "KEY"};
+    const char defKeys[keyCnt] = {ACK, NAK, ENQ, EOT, LF};
     const char defSendKeys[sendkeyCnt] = {STX, 0x55, 0x00, 0x00, ETX, 0x56};//(02 55 00 a0 03 f6}
     //settings
     SettingsDialog *conf = nullptr;

@@ -29,7 +29,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1" colspan="4">
+    <item row="0" column="1">
      <widget class="QLineEdit" name="stx">
       <property name="minimumSize">
        <size>
@@ -52,7 +52,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="5">
+    <item row="0" column="2">
      <widget class="QPushButton" name="answer">
       <property name="enabled">
        <bool>true</bool>
@@ -96,7 +96,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="0" rowspan="5" colspan="5">
+    <item row="1" column="0" rowspan="6" colspan="2">
      <widget class="QTextEdit" name="log">
       <property name="font">
        <font>
@@ -113,7 +113,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="5">
+    <item row="1" column="2">
      <widget class="QPushButton" name="ack">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -162,7 +162,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="5">
+    <item row="2" column="2">
      <widget class="QPushButton" name="nak">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -212,7 +212,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="5">
+    <item row="3" column="2">
      <widget class="QPushButton" name="enq">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -261,7 +261,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="5">
+    <item row="4" column="2">
      <widget class="QPushButton" name="eot">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -310,7 +310,56 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="5" column="5">
+    <item row="5" column="2">
+     <widget class="QPushButton" name="any">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>0x04</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton#any{
+background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 234, 255), stop:1 rgba(36, 99, 255, 255));
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#any:hover{
+background-color: rgb(115, 153, 234);
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#eot:disabled{
+background-color:rgb(226, 226, 226)}</string>
+      </property>
+      <property name="text">
+       <string>ANY</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="2">
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -323,146 +372,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </spacer>
     </item>
-    <item row="6" column="0" colspan="2">
-     <widget class="QPushButton" name="disconnect">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>90</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Open Sans</family>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">QPushButton#disconnect{
-background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 155, 115), stop:1 rgba(115, 115, 155, 255));
-border-radius: 5;
-color: rgb(255, 255, 255);
-}
-
-QPushButton#disconnect:hover{
-background-color: rgb(41, 136, 234);
-border-radius: 5;
-color: rgb(255, 255, 255);
-}
-
-QPushButton#disconnect:disabled{
-background-color:rgb(226, 226, 226)}</string>
-      </property>
-      <property name="text">
-       <string>Disconnect</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="2">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>225</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="6" column="3">
-     <widget class="QLabel" name="pic">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>60</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>60</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="4">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>236</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="6" column="5">
-     <widget class="QPushButton" name="connect">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>90</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Open Sans</family>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">QPushButton#connect{
-background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 155, 115), stop:1 rgba(115, 115, 155, 255));
-border-radius: 5;
-color: rgb(255, 255, 255);
-}
-
-QPushButton#connect:hover{
-background-color: rgb(41, 136, 234);
-border-radius: 5;
-color: rgb(255, 255, 255);
-}
-
-QPushButton#connect:disabled{
-background-color:rgb(226, 226, 226)}</string>
-      </property>
-      <property name="text">
-       <string>Connect</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0" colspan="6">
+    <item row="7" column="0" colspan="3">
      <widget class="QLabel" name="status">
       <property name="minimumSize">
        <size>
