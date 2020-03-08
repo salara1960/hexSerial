@@ -23,7 +23,9 @@
 //const QString vers = "0.7";//24.10.2019
 //const QString vers = "0.7.1";//25.10.2019
 //const QString vers = "0.7.2";//27.10.2019
-const QString vers = "0.8";//29.10.2019
+//const QString vers = "0.8";//29.10.2019
+//const QString vers = "0.9";//08.03.2020
+const QString vers = "1.0";//08.03.2020
 
 
 const QString title = "hexSerialTerminal";
@@ -93,10 +95,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     keyAdr[keyId] = ui->enq; keyId++;
     keyAdr[keyId] = ui->eot; keyId++;
     keyAdr[keyId] = ui->any;
+    QString tstr;
     for (int i = 0; i < keyCnt; ++i) {
         keyArr[i].clear();
         keyArr[i].append(defKeys[i]);
-        keyAdr[i]->setToolTip("0x" + QString::number(keyArr[i].at(0), 16));
+        tstr.clear();
+        for (int j = 0; j < keyArr[i].length(); j++) {
+            //keyArr[i].clear();
+            //keyArr[i].append(defKeys[i]);
+            if (keyArr[i].at(j) != 0) {
+                tstr.append(" 0x" + QString::number(keyArr[i].at(j), 16));
+            }
+        }
+        keyAdr[i]->setToolTip(tstr);
     }
     //
     QByteArray stz; stz.append(defSendKeys, sendkeyCnt);
@@ -130,7 +141,17 @@ void MainWindow::KeyProg(QByteArray bt)
         hexTobin(bt.data(), &tmp);
         if (tmp.length()) {
             keyArr[keyId] = tmp;
-            keyAdr[keyId]->setToolTip(tmp.toHex(' '));
+            if (keyId < keyCnt - 1)
+                keyAdr[keyId]->setToolTip(tmp.toHex(' '));
+            else {
+                QString tstr; tstr.clear();
+                for (int j = 0; j < keyArr[keyId].length(); j++) {
+                    if (keyArr[keyId].at(j) != 0) {
+                        tstr.append(" 0x" + QString::number(keyArr[keyId].at(j), 16));
+                    }
+                }
+                keyAdr[keyId]->setToolTip(tstr);
+            }
         }
     }
     if (keys) { delete keys; keys = nullptr; }
@@ -142,7 +163,8 @@ void MainWindow::slotButtonData()
         QString from(keyName[keyId] + " key programming");
 
         if (keys) { delete keys; keys = nullptr; }
-        QByteArray tmp; tmp.append(keyArr[keyId]);
+        QByteArray tmp;
+        tmp.append(keyArr[keyId]);
         keys = new pwdDialog(nullptr, from, tmp);
         if (keys) {
             connect(keys, SIGNAL(DoneW(QByteArray)), this, SLOT(KeyProg(QByteArray)));
@@ -160,6 +182,63 @@ void MainWindow::clrLog()
     ui->log->clear();
 }
 //--------------------------------------------------------------------------------
+#ifndef __WIN32
+void MainWindow::setSPEED(int fd, const void *ptr)
+{
+    if ((fd < 0) || (ptr == nullptr)) return;
+
+    struct termios tio;
+    uint32_t speed = 0, blen = 0, parity = 0, sbits = 0, fctrl = 0;
+    const SettingsDialog::Settings *p = (const SettingsDialog::Settings *)ptr;
+
+    switch (p->baudRate) {
+        case 460800: speed = B460800; break;
+        case 500000: speed = B500000; break;
+        case 576000: speed = B576000; break;
+        case 921600: speed = B921600; break;
+        case 1000000: speed = B1000000; break;
+        case 1152000: speed = B1152000; break;
+        case 1500000: speed = B1500000; break;
+        case 2000000: speed = B2000000; break;
+        case 2500000: speed = B2500000; break;
+        case 3000000: speed = B3000000; break;
+        case 3500000: speed = B3500000; break;
+        case 4000000: speed = B4000000; break;
+            default : speed = B230400;
+    }
+    switch (p->dataBits) {
+        case 7: blen = CS7; break;
+        case 6: blen = CS6; break;
+        case 5: blen = CS5; break;
+            default :blen = CS8;
+    }
+
+    switch ((int)p->parity) {
+        case 0: //no
+            break;
+        case 2: //even
+            parity = PARENB;
+            break;
+        case 3: //odd
+            parity = PARODD;
+            break;
+        case 4: //space
+            break;
+        case 5: //mark
+            break;
+    }
+    if (p->stopBits == 2) sbits = CSTOPB;
+    if (p->flowControl == 1) fctrl = CRTSCTS;
+    else if (p->flowControl == 2) fctrl = IXON | IXOFF;
+
+    tcgetattr(fd, &tio);
+    cfmakeraw(&tio);//set RAW mode
+    tio.c_cflag = speed | blen | parity | sbits | fctrl | CREAD | CLOCAL;//CLOCAL-игнорировать управление линиями с помощью модема.
+    tcflush(fd, TCIFLUSH);
+    tcsetattr(fd, TCSANOW, &tio);
+}
+#endif
+//--------------------------------------------------------------------------------
 int MainWindow::initSerial()
 {
     deinitSerial();
@@ -168,17 +247,30 @@ int MainWindow::initSerial()
     if (sdev) {
         const SettingsDialog::Settings p = conf->settings();
         sdevName = p.name;   sdev->setPortName(sdevName);
-        sdev->setBaudRate(p.baudRate);
-        sdev->setDataBits(p.dataBits);
-        sdev->setParity(p.parity);
-        sdev->setFlowControl(p.flowControl);
-        sdev->setStopBits(p.stopBits);
+
+#ifdef __WIN32
+        if (p.baudRate > 115200) p.baudRate = 115200;
+#endif
+        if (p.baudRate <= 115200) {
+            sdev->setBaudRate(p.baudRate);
+            sdev->setDataBits(p.dataBits);
+            sdev->setParity(p.parity);
+            sdev->setFlowControl(p.flowControl);
+            sdev->setStopBits(p.stopBits);
+        }
 
         if (!sdev->open(QIODevice::ReadWrite)) {
             delete sdev;
             sdev = nullptr;
             return 1;
         } else {
+            //
+            if (p.baudRate > 115200) {
+#ifndef __WIN32
+                setSPEED(sdev->handle(), (const void *)&p);
+#endif
+            }
+            //
             rxData.clear();            
             while (!sdev->atEnd()) rxData.append(sdev->readAll());
             rxData.clear();

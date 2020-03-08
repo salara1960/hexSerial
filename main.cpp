@@ -22,7 +22,8 @@ QString errStr = "", cerrStr;
 
         QLockFile lockFile(QDir::temp().absoluteFilePath("hexSerial.lock"));
         if (!lockFile.tryLock(100)){
-            QMessageBox::warning(nullptr, "Внимание", "Программа уже запущена");
+            QMessageBox::warning(nullptr, "Attention !!!", "Program is already running");
+
             return 1;
         }
 
@@ -42,14 +43,13 @@ QString errStr = "", cerrStr;
             if (cerr & 4) errStr.append("Error create settings object\n");
             if (cerr & 8) errStr.append("Error reading from serial port\n");
         } else errStr.append("Unknown Error (" + cerrStr + ")\n");
-        if (errStr.length() > 0) {
-            //perror((char *)cerrStr.data());
-            perror(reinterpret_cast<char *>(cerrStr.data()));
-        }
+        if (errStr.length() > 0) perror(reinterpret_cast<char *>(cerrStr.data()));
+
         return cerr;
     }
     catch (std::bad_alloc) {
         perror("Error while alloc memory via call function new\n");
+
         return -1;
     }
 

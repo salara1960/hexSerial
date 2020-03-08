@@ -9,10 +9,12 @@
 #include <unistd.h>
 
 #ifdef __WIN32
-#include <windows.h>
+    #include <windows.h>
 #else
-#include <arpa/inet.h>
-#include <endian.h>
+    #include <arpa/inet.h>
+    #include <endian.h>
+    #include <termios.h>
+    #include <unistd.h>
 #endif
 
 #include <QApplication>
@@ -37,6 +39,26 @@
 
 //********************************************************************************
 
+/*
+#ifndef __WIN32
+    #define  B57600   0010001
+    #define  B115200  0010002
+    #define  B230400  0010003
+    #define  B460800  0010004
+    #define  B500000  0010005
+    #define  B576000  0010006
+    #define  B921600  0010007
+    #define  B1000000 0010010
+    #define  B1152000 0010011
+    #define  B1500000 0010012
+    #define  B2000000 0010013
+    #define  B2500000 0010014
+    #define  B3000000 0010015
+    #define  B3500000 0010016
+    #define  B4000000 0010017
+#endif
+*/
+
 #define SET_DEBUG
 #define SET_MOUSE_KEY
 
@@ -55,6 +77,7 @@
 #define CR   0x0D
 
 #define keyCnt 5
+#define deepCnt 2
 #define sendkeyCnt 6
 
 typedef enum {
@@ -100,6 +123,9 @@ public slots:
     void slotButtonData();
     void KeyProg(QByteArray);
     int initSerial();
+#ifndef __WIN32
+    void setSPEED(int fd, const void *ptr);
+#endif
     void deinitSerial();
     void LogSave(const char *, const QByteArray &, bool, bool);
     void About();
