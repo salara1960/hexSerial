@@ -113,6 +113,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void timerEvent(QTimerEvent *event);
+    bool chkDone(QByteArray *buf);
 
 #ifdef SET_MOUSE_KEY
 protected:

@@ -26,10 +26,12 @@
 //const QString vers = "0.8";//29.10.2019
 //const QString vers = "0.9";//08.03.2020
 //const QString vers = "1.0";//08.03.2020
-const QString vers = "1.1";//18.06.2020
+//const QString vers = "1.1";//18.06.2020
+const QString vers = "1.2";//10.07.2020
 
 
-const QString title = "hexSerialTerminal";
+
+const QString title = "SerialTerminal";
 
 const QString main_pic    = "png/main.png";
 const QString con_pic     = "png/conn.png";
@@ -115,12 +117,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         keyAdr[i]->setToolTip(tstr);
     }
     //
-    QByteArray stz; stz.append(defSendKeys, sendkeyCnt);
-    ui->stx->setText(stz.toHex());
+    QByteArray stz; stz.clear();
+    //stz.append(defSendKeys, sendkeyCnt);
+    //ui->stx->setText(stz.toHex());
+    ui->stx->setText("#");
     ui->stx->setEnabled(false);
-    ui->hexBox->setCheckState(Qt::Checked);
+    ui->hexBox->setCheckState(Qt::Unchecked);
     ui->asciiBox->setCheckState(Qt::Checked);
-    ui->crlfBox->setCheckState(Qt::Unchecked);
+    ui->crlfBox->setCheckState(Qt::Checked);
     ui->hexBox->setEnabled(false);
     ui->asciiBox->setEnabled(false);
     ui->crlfBox->setEnabled(false);
@@ -369,6 +373,7 @@ void MainWindow::on_connect()
         ui->hexBox->setEnabled(true);
         ui->asciiBox->setEnabled(true);
         ui->crlfBox->setEnabled(true);
+        rxData.clear();
     } else {
         ui->status->clear();
         ui->status->setText("Serial port " + sdevName + " open ERROR");
@@ -411,7 +416,8 @@ void MainWindow::slotWrite(QByteArray & mas)
             sdev->write(m.toLocal8Bit());
         }
 
-        LogSave(nullptr, mas, false, true);
+        LogSave(nullptr, mas, false, false);
+        rxData.clear();
     }
 }
 //-----------------------------------------------------------------------
@@ -538,25 +544,40 @@ void MainWindow::timerEvent(QTimerEvent *event)
     }
 }
 //-----------------------------------------------------------------------
+bool MainWindow::chkDone(QByteArray *buf)
+{
+bool ret = false;
+
+    if (buf->indexOf(">", 0) != -1) ret = true;
+    else
+    if (buf->indexOf("\r\n", 0) != -1) ret = true;
+    else
+    if (buf->indexOf("\r\n>", 0) != -1) ret = true;
+
+    return ret;
+}
+//-----------------------------------------------------------------------
 void MainWindow::ReadData()
 {
-    while (!sdev->atEnd()) rxData.append(sdev->read(1));
+bool eol = false;
 
-    //char buf[256];
-    //qint64 lens;
-
+    while (!sdev->atEnd()) {
+        rxData.append(sdev->read(1));
+        if (chkDone(&rxData)) break;
+    }
     if (rxData.length()) {
-        bool eol = false;
         if (ui->asciiBox->checkState() == Qt::Checked) {
             hex = false;
-            if (rxData.indexOf("\r\n", 0) != -1) eol = true;
-                                            else return;
+            if (chkDone(&rxData)) eol = true;
+            if (!eol) return;
         } else {
             eol = true;
             hex = true;
         }
-        LogSave(nullptr, rxData, true, true);
-        if (eol) rxData.clear();
+        if (eol) {
+            LogSave(nullptr, rxData, true, false);
+            rxData.clear();
+        }
     }
 
 }
