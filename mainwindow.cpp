@@ -25,7 +25,8 @@
 //const QString vers = "0.7.2";//27.10.2019
 //const QString vers = "0.8";//29.10.2019
 //const QString vers = "0.9";//08.03.2020
-const QString vers = "1.0";//08.03.2020
+//const QString vers = "1.0";//08.03.2020
+const QString vers = "1.1";//18.06.2020
 
 
 const QString title = "hexSerialTerminal";
@@ -37,6 +38,8 @@ const QString salara_pic  = "png/salara.png";
 const QString hide_pic    = "png/eyeHide.png";
 const QString show_pic    = "png/eyeShow.png";
 const QString close_pic   = "png/close.png";
+
+const QByteArray cr_lf = "\r\n";
 
 
 //******************************************************************************************************
@@ -56,8 +59,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->setWindowOpacity(0.90);//set the level of transparency
 
+    /*
     this->setTrayIconActions();
     this->showTrayIcon();
+    */
 
     first  = true;
     con = false;
@@ -112,9 +117,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     //
     QByteArray stz; stz.append(defSendKeys, sendkeyCnt);
     ui->stx->setText(stz.toHex());
-    ui->hexBox->setCheckState(Qt::Checked);
     ui->stx->setEnabled(false);
+    ui->hexBox->setCheckState(Qt::Checked);
+    ui->asciiBox->setCheckState(Qt::Checked);
+    ui->crlfBox->setCheckState(Qt::Unchecked);
     ui->hexBox->setEnabled(false);
+    ui->asciiBox->setEnabled(false);
+    ui->crlfBox->setEnabled(false);
     //
     connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
 
@@ -330,10 +339,9 @@ void MainWindow::LogSave(const char *func, const QByteArray & st, bool rxd, bool
     int len = st.length();
     fw.append(" (" + QString::number(len, 10) + ")");
     if (rxd) fw.append("> ");
-        else fw.append("< ");
+        else fw.append("< ");   
     if (hex) fw.append(st.toHex(' '));
         else fw.append(st);
-
     ui->log->append(fw);//to log screen
 }
 //-----------------------------------------------------------------------
@@ -359,6 +367,8 @@ void MainWindow::on_connect()
 
         ui->stx->setEnabled(true);
         ui->hexBox->setEnabled(true);
+        ui->asciiBox->setEnabled(true);
+        ui->crlfBox->setEnabled(true);
     } else {
         ui->status->clear();
         ui->status->setText("Serial port " + sdevName + " open ERROR");
@@ -384,6 +394,9 @@ void MainWindow::on_disconnect()
 
     ui->stx->setEnabled(false);
     ui->hexBox->setEnabled(false);
+    ui->asciiBox->setEnabled(false);
+    ui->crlfBox->setEnabled(false);
+
 }
 //-----------------------------------------------------------------------
 void MainWindow::slotWrite(QByteArray & mas)
@@ -467,6 +480,7 @@ void MainWindow::on_answer_clicked()
         tmp = sb;
     }
 
+    if (ui->crlfBox->checkState() == Qt::Checked) tmp.append(cr_lf);
     if (tmp.length()) emit sigWrite(tmp);
 
 }
@@ -528,10 +542,21 @@ void MainWindow::ReadData()
 {
     while (!sdev->atEnd()) rxData.append(sdev->read(1));
 
+    //char buf[256];
+    //qint64 lens;
+
     if (rxData.length()) {
-        hex = true;
+        bool eol = false;
+        if (ui->asciiBox->checkState() == Qt::Checked) {
+            hex = false;
+            if (rxData.indexOf("\r\n", 0) != -1) eol = true;
+                                            else return;
+        } else {
+            eol = true;
+            hex = true;
+        }
         LogSave(nullptr, rxData, true, true);
-        rxData.clear();
+        if (eol) rxData.clear();
     }
 
 }
@@ -547,6 +572,7 @@ void MainWindow::slotError(QSerialPort::SerialPortError serialPortError)
 //**************************************************************************************
 //                            Tray
 //**************************************************************************************
+/*
 void MainWindow::showTrayIcon()
 {
     trayIcon = new QSystemTrayIcon(this);
@@ -610,6 +636,7 @@ void MainWindow::closeEvent(QCloseEvent *evt)
         evt->ignore();
     }
 }
+*/
 //**************************************************************************************
 
 #ifdef SET_MOUSE_KEY

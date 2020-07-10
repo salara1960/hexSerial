@@ -135,12 +135,14 @@ public slots:
     void clrLog();
     //
     //tray
+    /*
     void changeEvent(QEvent*);
     void closeEvent(QCloseEvent *);
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void trayActionExecute();
     void setTrayIconActions();
     void showTrayIcon();
+    */
 
 #ifdef SET_MOUSE_KEY
     //Press mouse button
@@ -191,11 +193,13 @@ private:
     //settings
     SettingsDialog *conf = nullptr;
     //tray
+    /*
     QMenu *trayIconMenu;
     QAction *minA;
     QAction *maxA;
     QAction *quitA;
     QSystemTrayIcon *trayIcon;
+    */
 };
 
 #endif // MAINWINDOW_H
