@@ -276,21 +276,26 @@ void MainWindow::getFile()
     bool flag = fil.open(QIODevice::ReadOnly);
     if (flag) {
         fileSize = fil.size();
-        if (pTmp) { free(pTmp); pTmp = nullptr; }
-        pTmp = (uint8_t *)calloc(1, fileSize);
-        qint64 dl = fil.read((char *)pTmp, fileSize);
-        if (dl != fileSize) {
-            ui->status->clear();
-            ui->status->setText("Error readinf file " + *nm);
+        if (fileSize > 0) {
+            if (pTmp) { free(pTmp); pTmp = nullptr; }
+            pTmp = (uint8_t *)calloc(1, fileSize);
+            qint64 dl = fil.read((char *)pTmp, fileSize);
+            if (dl != fileSize) {
+                ui->status->clear();
+                ui->status->setText("Error readinf file " + *nm);
+            } else {
+                crcFile = crc32(0, pTmp, fileSize);
+                ui->status->clear();
+                ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16));
+            }
         } else {
-            crcFile = crc32(0, pTmp, fileSize);
             ui->status->clear();
-            ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16));
+            ui->status->setText("File " + *nm + " is empty !");
         }
         fil.close();
     } else {
         ui->status->clear();
-        ui->status->setText(tr("Error open file ") + *nm);
+        ui->status->setText("Error open file " + *nm);
     }
     delete nm;
     nm = nullptr;
@@ -442,12 +447,13 @@ void MainWindow::LogSave(const char *func, const QByteArray & st, bool rxd, bool
         fw.append(func);
         fw.append("] ");
     }
-    int len = st.length();
-    fw.append(" (" + QString::number(len, 10) + ")");
-    if (rxd) fw.append("> ");
-        else fw.append("< ");   
+    //int len = st.length();
+    //fw.append(" (" + QString::number(len, 10) + ")");
+    //if (rxd) fw.append("> ");
+    //    else fw.append("< ");
     if (hex) fw.append(st.toHex(' '));
         else fw.append(st);
+    if (fw.indexOf("\r\n", 0) != -1) fw.truncate(st.length() - 2);
     ui->log->append(fw);//to log screen
 }
 //-----------------------------------------------------------------------
@@ -650,11 +656,11 @@ bool MainWindow::chkDone(QByteArray *buf)
 {
 bool ret = false;
 
-    if (buf->indexOf(">", 0) != -1) ret = true;
+    if (buf->indexOf("ERROR!\r\n>", 0) != -1) ret = true;
     else
     if (buf->indexOf("\r\n", 0) != -1) ret = true;
     else
-    if (buf->indexOf("\r\n>", 0) != -1) ret = true;
+    if (buf->indexOf(">", 0) != -1) ret = true;
 
     return ret;
 }

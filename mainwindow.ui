@@ -900,6 +900,7 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
    <addaction name="actionDISCONNECT"/>
    <addaction name="actionPORT"/>
    <addaction name="actionCLEAR"/>
+   <addaction name="actionFile"/>
    <addaction name="actionVERSION"/>
   </widget>
   <action name="actionPORT">
