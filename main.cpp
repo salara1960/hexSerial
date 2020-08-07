@@ -18,6 +18,7 @@ QString errStr = "", cerrStr;
         QLocale loc(QLocale::Russian, QLocale::RussianFederation);
         QLocale::setDefault(loc);
 
+        //QApplication::setDesktopSettingsAware(false);
         QApplication app(argc, argv);
 
         QLockFile lockFile(QDir::temp().absoluteFilePath("hexSerial.lock"));

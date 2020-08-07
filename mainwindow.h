@@ -35,6 +35,8 @@
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
 #include <QMouseEvent>
+#include <QFileDialog>
+#include <QIODevice>
 
 
 //********************************************************************************
@@ -124,6 +126,7 @@ public slots:
     void slotButtonData();
     void KeyProg(QByteArray);
     int initSerial();
+    uint32_t crc32(const uint32_t crc_origin, const uint8_t *buf, const uint32_t size);
 #ifndef __WIN32
     void setSPEED(int fd, const void *ptr);
 #endif
@@ -162,6 +165,7 @@ private slots:
 
     void on_connect();
     void on_disconnect();
+    void getFile();
 
     void slotWrite(QByteArray &);
 
@@ -193,6 +197,11 @@ private:
     const char defSendKeys[sendkeyCnt] = {STX, 0x55, 0x00, 0x00, ETX, 0x56};//(02 55 00 a0 03 f6}
     //settings
     SettingsDialog *conf = nullptr;
+
+    qint64 fileSize;
+    uint8_t *pTmp;
+    uint32_t crcFile;
+
     //tray
     /*
     QMenu *trayIconMenu;

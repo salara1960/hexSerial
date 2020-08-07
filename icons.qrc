@@ -15,5 +15,6 @@
 	<file>png/button.png</file>
 	<file>png/eyeShow.png</file>
 	<file>png/eyeHide.png</file>
+	<file>png/folder.png</file>
     </qresource>
 </RCC>

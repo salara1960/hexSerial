@@ -401,6 +401,11 @@ background-color:rgb(226, 226, 226)}</string>
         <height>30</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
       <property name="styleSheet">
        <string notr="true">background-color: qlineargradient(spread:pad, x1:0.521739, y1:0.00568182, x2:0.516565, y2:0.914409, stop:0 rgba(70, 70, 70, 255), stop:1 rgba(255, 255, 255, 255));
 color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, stop:0 rgba(15, 25, 35, 255), stop:1 rgba(255, 255, 255, 255));</string>
@@ -429,6 +434,8 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
     <addaction name="actionCONNECT"/>
     <addaction name="actionDISCONNECT"/>
     <addaction name="actionCLEAR"/>
+    <addaction name="separator"/>
+    <addaction name="actionFile"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuABOUT">
@@ -998,6 +1005,20 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
   <action name="actionEOT">
    <property name="text">
     <string>EOT</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionFile">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/png/folder.png</normaloff>:/png/folder.png</iconset>
+   </property>
+   <property name="text">
+    <string>File</string>
    </property>
    <property name="font">
     <font>
