@@ -403,7 +403,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>8</pointsize>
+        <pointsize>9</pointsize>
        </font>
       </property>
       <property name="styleSheet">

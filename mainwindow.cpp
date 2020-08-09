@@ -28,7 +28,8 @@
 //const QString vers = "1.0";//08.03.2020
 //const QString vers = "1.1";//18.06.2020
 //const QString vers = "1.2";//10.07.2020
-const QString vers = "1.3";//07.08.2020
+//const QString vers = "1.3";//07.08.2020
+const QString vers = "1.4";//09.08.2020  !!! +++ !!!
 
 
 
@@ -118,8 +119,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     crcFile = 0;
     fileSize = 0;
     pTmp = nullptr;
+    Tik = 0;
+    ms10 = 0;
 
-    tmr_sec = startTimer(1000);// 1 sec.
+    tmr_sec = startTimer(10);// 10 msec.
     if (tmr_sec <= 0) {
         MyError |= 2;//start_timer error
         throw TheError(MyError);
@@ -478,7 +481,7 @@ void MainWindow::on_connect()
         ui->actionDISCONNECT->setEnabled(true);
 
         ui->stx->setEnabled(true);
-        ui->hexBox->setEnabled(true);
+        //ui->hexBox->setEnabled(true);
         ui->asciiBox->setEnabled(true);
         ui->crlfBox->setEnabled(true);
         rxData.clear();
@@ -506,7 +509,7 @@ void MainWindow::on_disconnect()
     ui->actionDISCONNECT->setEnabled(false);
 
     ui->stx->setEnabled(false);
-    ui->hexBox->setEnabled(false);
+    //ui->hexBox->setEnabled(false);
     ui->asciiBox->setEnabled(false);
     ui->crlfBox->setEnabled(false);
 
@@ -525,7 +528,7 @@ void MainWindow::slotWrite(QByteArray & mas)
         }
 
         LogSave(nullptr, mas, false, false);
-        rxData.clear();
+        //rxData.clear();
     }
 }
 //-----------------------------------------------------------------------
@@ -638,10 +641,13 @@ const char *uk = in;
 void MainWindow::timerEvent(QTimerEvent *event)
 { 
     if (tmr_sec == event->timerId()) {
-        time_t it_ct = QDateTime::currentDateTime().toTime_t();
-        struct tm *ctimka = localtime(&it_ct);
-        QString dt;
-        dt.sprintf("%02d.%02d.%04d %02d:%02d:%02d",
+        ms10++;
+        if (ms10 >= 99) {
+            Tik++;
+            time_t it_ct = QDateTime::currentDateTime().toTime_t();
+            struct tm *ctimka = localtime(&it_ct);
+            QString dt;
+            dt.sprintf("%02d.%02d.%04d %02d:%02d:%02d",
                     ctimka->tm_mday,
                     ctimka->tm_mon + 1,
                     ctimka->tm_year + 1900,
@@ -649,43 +655,69 @@ void MainWindow::timerEvent(QTimerEvent *event)
                     ctimka->tm_min,
                     ctimka->tm_sec);
         setWindowTitle(title +" ver. " + vers + "  |  " + dt);
+        }
     }
 }
 //-----------------------------------------------------------------------
-bool MainWindow::chkDone(QByteArray *buf)
+int MainWindow::chkDone(QByteArray *buf)
 {
-bool ret = false;
+int ret = -1;
 
-    if (buf->indexOf("ERROR!\r\n>", 0) != -1) ret = true;
-    else
-    if (buf->indexOf("\r\n", 0) != -1) ret = true;
-    else
-    if (buf->indexOf(">", 0) != -1) ret = true;
+    ret = buf->indexOf("\r\n>", 0);
+    if (ret != -1) {
+        return ret + 3;
+    } else {
+        ret = buf->indexOf("\r\n", 0);
+        if (ret != -1) {
+            return ret + 2;
+        } else {
+            ret = buf->indexOf(">", 0);
+            if (ret != -1) return ++ret;
+        }
+    }
 
     return ret;
 }
 //-----------------------------------------------------------------------
 void MainWindow::ReadData()
 {
-bool eol = false;
+//bool eol = false;
+int ix = -1;
 
     while (!sdev->atEnd()) {
-        rxData.append(sdev->read(1));
-        if (chkDone(&rxData)) break;
+        rxData += sdev->readAll();
+        ix = chkDone(&rxData);
+        if (ix != -1) break;
     }
-    if (rxData.length()) {
-        if (ui->asciiBox->checkState() == Qt::Checked) {
-            hex = false;
-            if (chkDone(&rxData)) eol = true;
-            if (!eol) return;
-        } else {
-            eol = true;
-            hex = true;
+        /*if (rxData.length()) {
+            if (ui->asciiBox->checkState() == Qt::Checked) {
+                hex = false;
+                eol = chkDone(&rxData);
+                if (!eol) return;
+            } else {
+                eol = true;
+                hex = true;
+            }
+            if (eol) {
+                LogSave(nullptr, rxData, true, false);
+                rxData.clear();
+            }
+        }*/
+    if (ix != -1) {
+        hex = false;
+        int pos = 0;
+        QByteArray dat, line = rxData.mid(0, ix);
+        dat = line;
+        if ((pos = line.indexOf("\r\n>", 0)) == -1) {
+            if ((pos = line.indexOf("\r\n", 0)) != -1) line.remove(pos, 2);
         }
-        if (eol) {
-            LogSave(nullptr, rxData, true, false);
-            rxData.clear();
-        }
+        LogSave(nullptr, line, true, false);
+        if (rxData.length() > (ix + 1)) {
+            dat = rxData.mid(ix, -1);
+            //rxData.clear();
+            rxData = dat;
+        } else rxData.clear();
+
     }
 
 }

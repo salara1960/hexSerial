@@ -115,7 +115,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void timerEvent(QTimerEvent *event);
-    bool chkDone(QByteArray *buf);
+    int chkDone(QByteArray *buf);
 
 #ifdef SET_MOUSE_KEY
 protected:
@@ -197,6 +197,7 @@ private:
     const char defSendKeys[sendkeyCnt] = {STX, 0x55, 0x00, 0x00, ETX, 0x56};//(02 55 00 a0 03 f6}
     //settings
     SettingsDialog *conf = nullptr;
+    uint32_t Tik, ms10;
 
     qint64 fileSize;
     uint8_t *pTmp;

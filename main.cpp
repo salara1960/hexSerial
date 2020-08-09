@@ -11,7 +11,7 @@ int cerr = 0;
 QString errStr = "", cerrStr;
 
 
-    setlocale(LC_ALL,"UTF8");
+    //setlocale(LC_ALL,"UTF8");
 
     try {
 
