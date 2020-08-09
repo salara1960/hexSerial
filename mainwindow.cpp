@@ -365,19 +365,19 @@ int MainWindow::initSerial()
 
     sdev = new QSerialPort(sdevName);
     if (sdev) {
-        const SettingsDialog::Settings p = conf->settings();
+        SettingsDialog::Settings p = conf->settings();
         sdevName = p.name;   sdev->setPortName(sdevName);
 
 #ifdef __WIN32
-        if (p.baudRate > 115200) p.baudRate = 115200;
+        //if (p.baudRate > 115200) p.baudRate = 115200;
 #endif
-        if (p.baudRate <= 115200) {
+        //if (p.baudRate <= 115200) {
             sdev->setBaudRate(p.baudRate);
             sdev->setDataBits(p.dataBits);
             sdev->setParity(p.parity);
             sdev->setFlowControl(p.flowControl);
             sdev->setStopBits(p.stopBits);
-        }
+        //}
 
         if (!sdev->open(QIODevice::ReadWrite)) {
             delete sdev;
@@ -387,7 +387,7 @@ int MainWindow::initSerial()
             //
             if (p.baudRate > 115200) {
 #ifndef __WIN32
-                setSPEED(sdev->handle(), (const void *)&p);
+                //setSPEED(sdev->handle(), (const void *)&p);
 #endif
             }
             //
@@ -453,7 +453,7 @@ void MainWindow::LogSave(const char *func, const QByteArray & st, bool rxd, bool
     //    else fw.append("< ");
     if (hex) fw.append(st.toHex(' '));
         else fw.append(st);
-    if (fw.indexOf("\r\n", 0) != -1) fw.truncate(st.length() - 2);
+//    if (fw.indexOf("\r\n", 0) != -1) fw.truncate(st.length() - 2);
     ui->log->append(fw);//to log screen
 }
 //-----------------------------------------------------------------------
