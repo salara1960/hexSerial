@@ -145,14 +145,14 @@ color: rgb(255, 255, 255);
 }
 
 QPushButton#ack:disabled{
-background-color:rgb(226, 226, 226)}</string>
+background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="text">
        <string/>
       </property>
      </widget>
     </item>
-    <item row="2" column="0" rowspan="6" colspan="2">
+    <item row="2" column="0" rowspan="9" colspan="2">
      <widget class="QTextEdit" name="log">
       <property name="font">
        <font>
@@ -212,7 +212,7 @@ color: rgb(255, 255, 255);
 }
 
 QPushButton#nak:disabled{
-background-color:rgb(226, 226, 226)}</string>
+background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="text">
        <string/>
@@ -261,7 +261,7 @@ color: rgb(255, 255, 255);
 }
 
 QPushButton#enq:disabled{
-background-color:rgb(226, 226, 226)}</string>
+background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="text">
        <string/>
@@ -310,7 +310,7 @@ color: rgb(255, 255, 255);
 }
 
 QPushButton#eot:disabled{
-background-color:rgb(226, 226, 226)}</string>
+background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="text">
        <string/>
@@ -358,8 +358,8 @@ border-radius: 5;
 color: rgb(255, 255, 255);
 }
 
-QPushButton#eot:disabled{
-background-color:rgb(226, 226, 226)}</string>
+QPushButton#any:disabled{
+background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="text">
        <string/>
@@ -367,6 +367,153 @@ background-color:rgb(226, 226, 226)}</string>
      </widget>
     </item>
     <item row="7" column="2">
+     <widget class="QPushButton" name="info">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>0x04</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton#info{
+background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 234, 255), stop:1 rgba(36, 99, 255, 255));
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#info:hover{
+background-color: rgb(115, 153, 234);
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#info:disabled{
+background-color:rgb(206, 206, 206)}</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="2">
+     <widget class="QPushButton" name="deep">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>0x04</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton#deep{
+background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 234, 255), stop:1 rgba(36, 99, 255, 255));
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#deep:hover{
+background-color: rgb(115, 153, 234);
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#deep:disabled{
+background-color:rgb(206, 206, 206)}</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="2">
+     <widget class="QPushButton" name="crc">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>0x04</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton#crc{
+background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 234, 255), stop:1 rgba(36, 99, 255, 255));
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#crc:hover{
+background-color: rgb(115, 153, 234);
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#crc:disabled{
+background-color:rgb(206, 206, 206)}</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="2">
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -379,7 +526,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </spacer>
     </item>
-    <item row="8" column="0" colspan="3">
+    <item row="11" column="0" colspan="3">
      <widget class="QLabel" name="status">
       <property name="minimumSize">
        <size>

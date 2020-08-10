@@ -153,7 +153,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     keyAdr[keyId] = ui->nak; keyId++;
     keyAdr[keyId] = ui->enq; keyId++;
     keyAdr[keyId] = ui->eot; keyId++;
-    keyAdr[keyId] = ui->any;
+    keyAdr[keyId] = ui->any; keyId++;
+    keyAdr[keyId] = ui->info; keyId++;
+    keyAdr[keyId] = ui->deep; keyId++;
+    keyAdr[keyId] = ui->crc;
     for (int i = 0; i < keyCnt; ++i) {
         keyArr[i].clear();
         keyArr[i].append(keyData[i]);
@@ -161,7 +164,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         QString tp(keyData[i]);
         if (tp.indexOf("\r\n", 0) != -1) tp.truncate(tp.length() - 2);
         keyAdr[i]->setToolTip(tp);
+        keyAdr[i]->setEnabled(false);
+        //connect(keyAdr[i], SIGNAL(clicked(bool)), this, SLOT(keyPrs(int i)));
     }
+    connect(this, &MainWindow::snd_ind, this, &MainWindow::keyPrs);
     //
     QByteArray stz; stz.clear();
     ui->stx->setText("#");
@@ -170,6 +176,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->crlfBox->setEnabled(false);
     //
     connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
+
 
 #ifdef SET_MOUSE_KEY
     connect(this, &MainWindow::sigRM, this, &MainWindow::slotRM);
@@ -393,9 +400,12 @@ void MainWindow::on_connect()
         ui->actionPORT->setEnabled(false);
         ui->actionDISCONNECT->setEnabled(true);
 
+        for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(true);
+
         ui->stx->setEnabled(true);
         ui->crlfBox->setEnabled(true);
         rxData.clear();
+
     } else {
         ui->status->clear();
         ui->status->setText("Serial port " + sdevName + " open ERROR");
@@ -422,6 +432,8 @@ void MainWindow::on_disconnect()
     ui->stx->setEnabled(false);
     ui->crlfBox->setEnabled(false);
 
+    for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(false);
+
 }
 //-----------------------------------------------------------------------
 void MainWindow::slotWrite(QByteArray & mas)
@@ -432,50 +444,6 @@ void MainWindow::slotWrite(QByteArray & mas)
         QString m(mas);
         sdev->write(m.toLocal8Bit());
         LogSave(nullptr, mas, false);
-    }
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_ack_clicked()
-{
-    if (sdev) {
-        QByteArray m; m.append(keyArr[KEY_ACK]);
-        emit sigWrite(m);
-    } else {
-        keyId = KEY_ACK;
-        emit sigButtonData();
-    }
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_nak_clicked()
-{
-    if (sdev) {
-        QByteArray m; m.append(keyArr[KEY_NAK]);
-        emit sigWrite(m);
-    } else {
-        keyId = KEY_NAK;
-        emit sigButtonData();
-    }
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_enq_clicked()
-{
-    if (sdev) {
-        QByteArray m; m.append(keyArr[KEY_ENQ]);
-        emit sigWrite(m);
-    } else {
-        keyId = KEY_ENQ;
-        emit sigButtonData();
-    }
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_eot_clicked()
-{
-    if (sdev) {
-        QByteArray m; m.append(keyArr[KEY_EOT]);
-        emit sigWrite(m);
-    } else {
-        keyId = KEY_EOT;
-        emit sigButtonData();
     }
 }
 //-----------------------------------------------------------------------
@@ -492,13 +460,55 @@ void MainWindow::on_answer_clicked()
 
 }
 //-----------------------------------------------------------------------
+/**/
+void MainWindow::on_ack_clicked()
+{
+    emit snd_ind(KEY_ACK);
+}
+//-----------------------------------------------------------------------
+void MainWindow::on_nak_clicked()
+{
+    emit snd_ind(KEY_NAK);
+}
+//-----------------------------------------------------------------------
+void MainWindow::on_enq_clicked()
+{
+    emit snd_ind(KEY_ENQ);
+}
+//-----------------------------------------------------------------------
+void MainWindow::on_eot_clicked()
+{
+    emit snd_ind(KEY_EOT);
+}
+//-----------------------------------------------------------------------
 void MainWindow::on_any_clicked()
 {
+    emit snd_ind(KEY_KEY);
+}
+//-----------------------------------------------------------------------
+void MainWindow::on_info_clicked()
+{
+    emit snd_ind(KEY_INFO);
+}
+//-----------------------------------------------------------------------
+void MainWindow::on_deep_clicked()
+{
+    emit snd_ind(KEY_DEEP);
+}
+//-----------------------------------------------------------------------
+void MainWindow::on_crc_clicked()
+{
+    emit snd_ind(KEY_CRC);
+}
+/**/
+//-----------------------------------------------------------------------
+void MainWindow::keyPrs(int key)
+{
     if (sdev) {
-        QByteArray m; m.append(keyArr[KEY_KEY]);
+        QByteArray m; m.append(keyArr[key]);
         emit sigWrite(m);
     } else {
-        keyId = KEY_KEY;
+        keyId = key;
         emit sigButtonData();
     }
 }

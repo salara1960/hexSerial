@@ -41,32 +41,13 @@
 
 //********************************************************************************
 
-/*
-#ifndef __WIN32
-    #define  B57600   0010001
-    #define  B115200  0010002
-    #define  B230400  0010003
-    #define  B460800  0010004
-    #define  B500000  0010005
-    #define  B576000  0010006
-    #define  B921600  0010007
-    #define  B1000000 0010010
-    #define  B1152000 0010011
-    #define  B1500000 0010012
-    #define  B2000000 0010013
-    #define  B2500000 0010014
-    #define  B3000000 0010015
-    #define  B3500000 0010016
-    #define  B4000000 0010017
-#endif
-*/
 
 #define SET_DEBUG
 #define SET_MOUSE_KEY
 
 #define max_buf 2048
 
-#define keyCnt 5
+#define keyCnt 8
 
 
 typedef enum {
@@ -74,7 +55,10 @@ typedef enum {
     KEY_NAK,
     KEY_ENQ,
     KEY_EOT,
-    KEY_KEY
+    KEY_KEY,
+    KEY_INFO,
+    KEY_DEEP,
+    KEY_CRC
 } keys_t;
 
 //********************************************************************************
@@ -139,12 +123,18 @@ public slots:
 private slots:
     void ReadData();
     void slotError(QSerialPort::SerialPortError);
+    void on_answer_clicked();
+    /**/
     void on_ack_clicked();
     void on_nak_clicked();
     void on_enq_clicked();
     void on_eot_clicked();
-    void on_answer_clicked();
     void on_any_clicked();
+    void on_info_clicked();
+    void on_deep_clicked();
+    void on_crc_clicked();
+    /**/
+    void keyPrs(int);
 
     void on_connect();
     void on_disconnect();
@@ -158,6 +148,9 @@ signals:
     void sigButtonData();
     void sigConn();
     void sigDisc();
+
+    void snd_ind(int);
+
 
 #ifdef SET_MOUSE_KEY
     void sigRM(int, int);
@@ -175,8 +168,8 @@ private:
     QString keyArr[keyCnt];
     pwdDialog *keys;
     QPushButton *keyAdr[keyCnt];
-    const QString keyName[keyCnt] = {"Stop", "Start", "Dirs", "Free", "Info"};
-    const QString keyData[keyCnt] = {"#", "m1\r\n", "$dirs\r\n", "$free\r\n", "#149\r\n"};
+    const QString keyName[keyCnt] = {"Stop", "Start", "Dirs", "Bin", "Text", "Info", "Deep", "CRC32"};
+    const QString keyData[keyCnt] = {"#", "m1\r\n", "$dirs\r\n", "#082;bin\r\n", "#082;sc33\r\n", "#149\r\n", "#140\r\n", "#147\r\n"};
     //settings
     SettingsDialog *conf = nullptr;
     uint32_t Tik, ms10;
