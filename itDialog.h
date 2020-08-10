@@ -16,15 +16,15 @@ class pwdDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit pwdDialog(QWidget *parent = nullptr, QString = "", QByteArray = "");
+    explicit pwdDialog(QWidget *parent = nullptr, QString = "", QString = "");
     ~pwdDialog();
 
 signals:
-    void DoneW(QByteArray);
+    void DoneW(QString);
 
 private:
     Ui::pwdDialog *uiw;
-    QByteArray buf;
+    QString buf;
 
 public slots:
     void slotOk();

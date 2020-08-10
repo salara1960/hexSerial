@@ -47,7 +47,7 @@
 
 #define max_buf 2048
 
-#define keyCnt 8
+#define keyCnt 9
 
 
 typedef enum {
@@ -58,7 +58,8 @@ typedef enum {
     KEY_KEY,
     KEY_INFO,
     KEY_DEEP,
-    KEY_CRC
+    KEY_CRC,
+    KEY_ONE
 } keys_t;
 
 //********************************************************************************
@@ -95,7 +96,7 @@ protected:
 
 public slots:
     void slotButtonData();
-    void KeyProg(QByteArray);
+    void KeyProg(QString);
     int initSerial();
     uint32_t crc32(const uint32_t crc_origin, const uint8_t *buf, const uint32_t size);
     void deinitSerial();
@@ -124,7 +125,7 @@ private slots:
     void ReadData();
     void slotError(QSerialPort::SerialPortError);
     void on_answer_clicked();
-    /**/
+    /*
     void on_ack_clicked();
     void on_nak_clicked();
     void on_enq_clicked();
@@ -133,8 +134,9 @@ private slots:
     void on_info_clicked();
     void on_deep_clicked();
     void on_crc_clicked();
-    /**/
-    void keyPrs(int);
+    void on_one_clicked();
+    */
+    void keyPrs();
 
     void on_connect();
     void on_disconnect();
@@ -168,8 +170,8 @@ private:
     QString keyArr[keyCnt];
     pwdDialog *keys;
     QPushButton *keyAdr[keyCnt];
-    const QString keyName[keyCnt] = {"Stop", "Start", "Dirs", "Bin", "Text", "Info", "Deep", "CRC32"};
-    const QString keyData[keyCnt] = {"#", "m1\r\n", "$dirs\r\n", "#082;bin\r\n", "#082;sc33\r\n", "#149\r\n", "#140\r\n", "#147\r\n"};
+    const QString keyName[keyCnt] = {"Stop", "Start", "Dirs", "Bin", "Text", "Info", "Deep", "CRC32", "Key"};
+    const QString keyData[keyCnt] = {"#", "m1\r\n", "$dirs\r\n", "#082;bin\r\n", "#082;sc33\r\n", "#149\r\n", "#140\r\n", "#147\r\n", "s\r\n"};
     //settings
     SettingsDialog *conf = nullptr;
     uint32_t Tik, ms10;

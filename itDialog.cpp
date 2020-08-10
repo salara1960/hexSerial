@@ -2,7 +2,7 @@
 #include "ui_itDialog.h"
 
 //**************************************************************************************
-pwdDialog::pwdDialog(QWidget *parent, QString title, QByteArray arr) : QDialog(parent), uiw(new Ui::pwdDialog)
+pwdDialog::pwdDialog(QWidget *parent, QString title, QString arr) : QDialog(parent), uiw(new Ui::pwdDialog)
 {
     uiw->setupUi(this);
 
@@ -12,7 +12,7 @@ pwdDialog::pwdDialog(QWidget *parent, QString title, QByteArray arr) : QDialog(p
     setWindowTitle(title);
 
     buf.clear();
-    uiw->line->setText(arr.toHex(' '));
+    uiw->line->setText(arr);
 
     connect(uiw->but_ok, SIGNAL(pressed()), this, SLOT(slotOk()));
 
@@ -28,7 +28,7 @@ void pwdDialog::slotOk()
 {
     buf.append(uiw->line->text().toLocal8Bit());
 
-    emit DoneW(buf.toUpper());
+    emit DoneW(buf);
 }
 //**************************************************************************************
 

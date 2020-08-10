@@ -29,7 +29,8 @@
 //const QString vers = "1.1";//18.06.2020
 //const QString vers = "1.2";//10.07.2020
 //const QString vers = "1.3";//07.08.2020
-const QString vers = "1.4";//09.08.2020  !!! +++ !!!
+//const QString vers = "1.4";//09.08.2020  !!! +++ !!!
+const QString vers = "1.5";//10.08.2020
 
 
 
@@ -105,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->setWindowIcon(QIcon(main_pic));
 
-    this->setWindowOpacity(0.85);//set the level of transparency
+    this->setWindowOpacity(0.90);//set the level of transparency
 
     /*
     this->setTrayIconActions();
@@ -156,7 +157,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     keyAdr[keyId] = ui->any; keyId++;
     keyAdr[keyId] = ui->info; keyId++;
     keyAdr[keyId] = ui->deep; keyId++;
-    keyAdr[keyId] = ui->crc;
+    keyAdr[keyId] = ui->crc;  keyId++;
+    keyAdr[keyId] = ui->one;
     for (int i = 0; i < keyCnt; ++i) {
         keyArr[i].clear();
         keyArr[i].append(keyData[i]);
@@ -164,10 +166,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         QString tp(keyData[i]);
         if (tp.indexOf("\r\n", 0) != -1) tp.truncate(tp.length() - 2);
         keyAdr[i]->setToolTip(tp);
-        keyAdr[i]->setEnabled(false);
-        //connect(keyAdr[i], SIGNAL(clicked(bool)), this, SLOT(keyPrs(int i)));
+        //keyAdr[i]->setEnabled(false);
+        connect(keyAdr[i], &QPushButton::clicked, this, &MainWindow::keyPrs);
     }
-    connect(this, &MainWindow::snd_ind, this, &MainWindow::keyPrs);
+    //connect(this, &MainWindow::snd_ind, this, &MainWindow::keyPrs);
     //
     QByteArray stz; stz.clear();
     ui->stx->setText("#");
@@ -195,23 +197,15 @@ MainWindow::~MainWindow()
     delete ui;
 }
 //--------------------------------------------------------------------------------
-void MainWindow::KeyProg(QByteArray bt)
+void MainWindow::KeyProg(QString str)
 {
     if (keyId < keyCnt) {
-        QByteArray tmp; tmp.clear();
-        hexTobin(bt.data(), &tmp);
-        if (tmp.length()) {
-            keyArr[keyId] = tmp;
-            if (keyId < keyCnt - 1)
-                keyAdr[keyId]->setToolTip(tmp.toHex(' '));
-            else {
-                QString tstr; tstr.clear();
-                for (int j = 0; j < keyArr[keyId].length(); j++) {
-                    if (keyArr[keyId].at(j) != 0) {
-                        tstr.append(keyArr[keyId]);
-                    }
-                }
-                keyAdr[keyId]->setToolTip(tstr);
+        if (str.length()) {
+            if (keyAdr[keyId]->text() != str) {
+                keyArr[keyId].clear();
+                keyArr[keyId].append(str + cr_lf);
+                keyAdr[keyId]->setText(str);
+                keyAdr[keyId]->setToolTip(str);
             }
         }
     }
@@ -224,11 +218,12 @@ void MainWindow::slotButtonData()
         QString from(keyName[keyId] + " key programming");
 
         if (keys) { delete keys; keys = nullptr; }
-        QByteArray tmp;
-        tmp.append(keyArr[keyId]);
-        keys = new pwdDialog(nullptr, from, tmp);
+        QString tp;
+        tp.append(keyArr[keyId]);
+        if (tp.indexOf("\r\n", 0) != -1) tp.truncate(tp.length() - 2);
+        keys = new pwdDialog(nullptr, from, tp);
         if (keys) {
-            connect(keys, SIGNAL(DoneW(QByteArray)), this, SLOT(KeyProg(QByteArray)));
+            connect(keys, SIGNAL(DoneW(QString)), this, SLOT(KeyProg(QString)));
             keys->show();
         }
     }
@@ -400,7 +395,7 @@ void MainWindow::on_connect()
         ui->actionPORT->setEnabled(false);
         ui->actionDISCONNECT->setEnabled(true);
 
-        for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(true);
+        //for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(true);
 
         ui->stx->setEnabled(true);
         ui->crlfBox->setEnabled(true);
@@ -432,7 +427,7 @@ void MainWindow::on_disconnect()
     ui->stx->setEnabled(false);
     ui->crlfBox->setEnabled(false);
 
-    for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(false);
+    //for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(false);
 
 }
 //-----------------------------------------------------------------------
@@ -460,7 +455,7 @@ void MainWindow::on_answer_clicked()
 
 }
 //-----------------------------------------------------------------------
-/**/
+/*
 void MainWindow::on_ack_clicked()
 {
     emit snd_ind(KEY_ACK);
@@ -500,16 +495,30 @@ void MainWindow::on_crc_clicked()
 {
     emit snd_ind(KEY_CRC);
 }
-/**/
 //-----------------------------------------------------------------------
-void MainWindow::keyPrs(int key)
+void MainWindow::on_one_clicked()
 {
-    if (sdev) {
-        QByteArray m; m.append(keyArr[key]);
-        emit sigWrite(m);
-    } else {
-        keyId = key;
-        emit sigButtonData();
+    emit snd_ind(KEY_ONE);
+}
+*/
+//-----------------------------------------------------------------------
+void MainWindow::keyPrs()
+{
+    int key = -1;
+    for (int i = 0; i < keyCnt; i++) {
+        if (sender() == keyAdr[i]) {
+            key = i;
+            break;
+        }
+    }
+    if (key != -1) {
+        if (sdev) {
+            QByteArray m; m.append(keyArr[key]);
+            emit sigWrite(m);
+        } else {
+            keyId = key;
+            emit sigButtonData();
+        }
     }
 }
 //------------------------------------------------------------------------------------

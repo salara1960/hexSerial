@@ -6,9 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>761</width>
-    <height>586</height>
+    <width>720</width>
+    <height>624</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>720</width>
+    <height>624</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>16777215</height>
+   </size>
   </property>
   <property name="font">
    <font>
@@ -96,14 +114,31 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="0" colspan="2">
+    <item row="1" column="0" colspan="3">
      <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
-    <item row="1" column="2" rowspan="2">
+    <item row="2" column="0" rowspan="10" colspan="2">
+     <widget class="QTextEdit" name="log">
+      <property name="font">
+       <font>
+        <family>Sans Serif</family>
+        <pointsize>11</pointsize>
+        <italic>false</italic>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::WinPanel</enum>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOn</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
      <widget class="QPushButton" name="ack">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -150,22 +185,8 @@ background-color:rgb(206, 206, 206)}</string>
       <property name="text">
        <string/>
       </property>
-     </widget>
-    </item>
-    <item row="2" column="0" rowspan="9" colspan="2">
-     <widget class="QTextEdit" name="log">
-      <property name="font">
-       <font>
-        <family>Sans Serif</family>
-        <pointsize>11</pointsize>
-        <italic>false</italic>
-       </font>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::WinPanel</enum>
-      </property>
-      <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarAlwaysOn</enum>
+      <property name="shortcut">
+       <string>F2</string>
       </property>
      </widget>
     </item>
@@ -217,6 +238,9 @@ background-color:rgb(206, 206, 206)}</string>
       <property name="text">
        <string/>
       </property>
+      <property name="shortcut">
+       <string>F3</string>
+      </property>
      </widget>
     </item>
     <item row="4" column="2">
@@ -265,6 +289,9 @@ background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="text">
        <string/>
+      </property>
+      <property name="shortcut">
+       <string>F4</string>
       </property>
      </widget>
     </item>
@@ -514,6 +541,55 @@ background-color:rgb(206, 206, 206)}</string>
      </widget>
     </item>
     <item row="10" column="2">
+     <widget class="QPushButton" name="one">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>90</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>0x04</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton#one{
+background-color: qlineargradient(spread:pad, x1:0, y1:0.773, x2:0.909091, y2:0.239, stop:0 rgba(115, 115, 234, 255), stop:1 rgba(36, 99, 255, 255));
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#one:hover{
+background-color: rgb(115, 153, 234);
+border-radius: 5;
+color: rgb(255, 255, 255);
+}
+
+QPushButton#one:disabled{
+background-color:rgb(206, 206, 206)}</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="2">
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -521,12 +597,12 @@ background-color:rgb(206, 206, 206)}</string>
       <property name="sizeHint" stdset="0">
        <size>
         <width>20</width>
-        <height>225</height>
+        <height>20</height>
        </size>
       </property>
      </spacer>
     </item>
-    <item row="11" column="0" colspan="3">
+    <item row="12" column="0" colspan="3">
      <widget class="QLabel" name="status">
       <property name="minimumSize">
        <size>
@@ -555,7 +631,7 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>761</width>
+     <width>720</width>
      <height>23</height>
     </rect>
    </property>
