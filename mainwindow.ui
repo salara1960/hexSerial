@@ -23,13 +23,6 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QCheckBox" name="hexBox">
-      <property name="text">
-       <string>Hex send</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
      <widget class="QLineEdit" name="stx">
       <property name="minimumSize">
        <size>
@@ -52,14 +45,14 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="2">
+    <item row="0" column="1">
      <widget class="QCheckBox" name="crlfBox">
       <property name="text">
        <string>+crlf</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="3">
+    <item row="0" column="2">
      <widget class="QPushButton" name="answer">
       <property name="enabled">
        <bool>true</bool>
@@ -103,14 +96,14 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="0" colspan="3">
+    <item row="1" column="0" colspan="2">
      <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
-    <item row="1" column="3" rowspan="2">
+    <item row="1" column="2" rowspan="2">
      <widget class="QPushButton" name="ack">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -155,18 +148,11 @@ QPushButton#ack:disabled{
 background-color:rgb(226, 226, 226)}</string>
       </property>
       <property name="text">
-       <string>ACK</string>
+       <string/>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
-     <widget class="QCheckBox" name="asciiBox">
-      <property name="text">
-       <string>Ascii recv</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0" rowspan="5" colspan="3">
+    <item row="2" column="0" rowspan="6" colspan="2">
      <widget class="QTextEdit" name="log">
       <property name="font">
        <font>
@@ -183,7 +169,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="3">
+    <item row="3" column="2">
      <widget class="QPushButton" name="nak">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -229,11 +215,11 @@ QPushButton#nak:disabled{
 background-color:rgb(226, 226, 226)}</string>
       </property>
       <property name="text">
-       <string>NAK</string>
+       <string/>
       </property>
      </widget>
     </item>
-    <item row="4" column="3">
+    <item row="4" column="2">
      <widget class="QPushButton" name="enq">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -278,11 +264,11 @@ QPushButton#enq:disabled{
 background-color:rgb(226, 226, 226)}</string>
       </property>
       <property name="text">
-       <string>ENQ</string>
+       <string/>
       </property>
      </widget>
     </item>
-    <item row="5" column="3">
+    <item row="5" column="2">
      <widget class="QPushButton" name="eot">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -327,11 +313,11 @@ QPushButton#eot:disabled{
 background-color:rgb(226, 226, 226)}</string>
       </property>
       <property name="text">
-       <string>EOT</string>
+       <string/>
       </property>
      </widget>
     </item>
-    <item row="6" column="3">
+    <item row="6" column="2">
      <widget class="QPushButton" name="any">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -376,11 +362,11 @@ QPushButton#eot:disabled{
 background-color:rgb(226, 226, 226)}</string>
       </property>
       <property name="text">
-       <string>ANY</string>
+       <string/>
       </property>
      </widget>
     </item>
-    <item row="7" column="3">
+    <item row="7" column="2">
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -393,7 +379,7 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </spacer>
     </item>
-    <item row="8" column="0" colspan="4">
+    <item row="8" column="0" colspan="3">
      <widget class="QLabel" name="status">
       <property name="minimumSize">
        <size>

@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->setWindowIcon(QIcon(main_pic));
 
-    this->setWindowOpacity(0.90);//set the level of transparency
+    this->setWindowOpacity(0.85);//set the level of transparency
 
     /*
     this->setTrayIconActions();
@@ -154,31 +154,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     keyAdr[keyId] = ui->enq; keyId++;
     keyAdr[keyId] = ui->eot; keyId++;
     keyAdr[keyId] = ui->any;
-    QString tstr;
     for (int i = 0; i < keyCnt; ++i) {
         keyArr[i].clear();
-        keyArr[i].append(defKeys[i]);
-        tstr.clear();
-        for (int j = 0; j < keyArr[i].length(); j++) {
-            //keyArr[i].clear();
-            //keyArr[i].append(defKeys[i]);
-            if (keyArr[i].at(j) != 0) {
-                tstr.append(" 0x" + QString::number(keyArr[i].at(j), 16));
-            }
-        }
-        keyAdr[i]->setToolTip(tstr);
+        keyArr[i].append(keyData[i]);
+        keyAdr[i]->setText(keyName[i]);
+        QString tp(keyData[i]);
+        if (tp.indexOf("\r\n", 0) != -1) tp.truncate(tp.length() - 2);
+        keyAdr[i]->setToolTip(tp);
     }
     //
     QByteArray stz; stz.clear();
-    //stz.append(defSendKeys, sendkeyCnt);
-    //ui->stx->setText(stz.toHex());
     ui->stx->setText("#");
     ui->stx->setEnabled(false);
-    ui->hexBox->setCheckState(Qt::Unchecked);
-    ui->asciiBox->setCheckState(Qt::Checked);
     ui->crlfBox->setCheckState(Qt::Checked);
-    ui->hexBox->setEnabled(false);
-    ui->asciiBox->setEnabled(false);
     ui->crlfBox->setEnabled(false);
     //
     connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
@@ -213,7 +201,7 @@ void MainWindow::KeyProg(QByteArray bt)
                 QString tstr; tstr.clear();
                 for (int j = 0; j < keyArr[keyId].length(); j++) {
                     if (keyArr[keyId].at(j) != 0) {
-                        tstr.append(" 0x" + QString::number(keyArr[keyId].at(j), 16));
+                        tstr.append(keyArr[keyId]);
                     }
                 }
                 keyAdr[keyId]->setToolTip(tstr);
@@ -289,7 +277,7 @@ void MainWindow::getFile()
             } else {
                 crcFile = crc32(0, pTmp, fileSize);
                 ui->status->clear();
-                ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16));
+                ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16).toUpper());
             }
         } else {
             ui->status->clear();
@@ -305,63 +293,6 @@ void MainWindow::getFile()
 
 }
 //--------------------------------------------------------------------------------
-#ifndef __WIN32
-void MainWindow::setSPEED(int fd, const void *ptr)
-{
-    if ((fd < 0) || (ptr == nullptr)) return;
-
-    struct termios tio;
-    uint32_t speed = 0, blen = 0, parity = 0, sbits = 0, fctrl = 0;
-    const SettingsDialog::Settings *p = (const SettingsDialog::Settings *)ptr;
-
-    switch (p->baudRate) {
-        case 460800: speed = B460800; break;
-        case 500000: speed = B500000; break;
-        case 576000: speed = B576000; break;
-        case 921600: speed = B921600; break;
-        case 1000000: speed = B1000000; break;
-        case 1152000: speed = B1152000; break;
-        case 1500000: speed = B1500000; break;
-        case 2000000: speed = B2000000; break;
-        case 2500000: speed = B2500000; break;
-        case 3000000: speed = B3000000; break;
-        case 3500000: speed = B3500000; break;
-        case 4000000: speed = B4000000; break;
-            default : speed = B230400;
-    }
-    switch (p->dataBits) {
-        case 7: blen = CS7; break;
-        case 6: blen = CS6; break;
-        case 5: blen = CS5; break;
-            default :blen = CS8;
-    }
-
-    switch ((int)p->parity) {
-        case 0: //no
-            break;
-        case 2: //even
-            parity = PARENB;
-            break;
-        case 3: //odd
-            parity = PARODD;
-            break;
-        case 4: //space
-            break;
-        case 5: //mark
-            break;
-    }
-    if (p->stopBits == 2) sbits = CSTOPB;
-    if (p->flowControl == 1) fctrl = CRTSCTS;
-    else if (p->flowControl == 2) fctrl = IXON | IXOFF;
-
-    tcgetattr(fd, &tio);
-    cfmakeraw(&tio);//set RAW mode
-    tio.c_cflag = speed | blen | parity | sbits | fctrl | CREAD | CLOCAL;//CLOCAL-игнорировать управление линиями с помощью модема.
-    tcflush(fd, TCIFLUSH);
-    tcsetattr(fd, TCSANOW, &tio);
-}
-#endif
-//--------------------------------------------------------------------------------
 int MainWindow::initSerial()
 {
     deinitSerial();
@@ -370,17 +301,11 @@ int MainWindow::initSerial()
     if (sdev) {
         SettingsDialog::Settings p = conf->settings();
         sdevName = p.name;   sdev->setPortName(sdevName);
-
-#ifdef __WIN32
-        //if (p.baudRate > 115200) p.baudRate = 115200;
-#endif
-        //if (p.baudRate <= 115200) {
-            sdev->setBaudRate(p.baudRate);
-            sdev->setDataBits(p.dataBits);
-            sdev->setParity(p.parity);
-            sdev->setFlowControl(p.flowControl);
-            sdev->setStopBits(p.stopBits);
-        //}
+        sdev->setBaudRate(p.baudRate);
+        sdev->setDataBits(p.dataBits);
+        sdev->setParity(p.parity);
+        sdev->setFlowControl(p.flowControl);
+        sdev->setStopBits(p.stopBits);
 
         if (!sdev->open(QIODevice::ReadWrite)) {
             delete sdev;
@@ -388,17 +313,10 @@ int MainWindow::initSerial()
             return 1;
         } else {
             //
-            if (p.baudRate > 115200) {
-#ifndef __WIN32
-                //setSPEED(sdev->handle(), (const void *)&p);
-#endif
-            }
-            //
             rxData.clear();            
             while (!sdev->atEnd()) rxData.append(sdev->readAll());
             rxData.clear();
             txData.clear();
-            hex = true;
 
             ui->log->append("\n");
 
@@ -437,7 +355,7 @@ void MainWindow::About()
     box.exec();
 }
 //-----------------------------------------------------------------------
-void MainWindow::LogSave(const char *func, const QByteArray & st, bool rxd, bool pr)
+void MainWindow::LogSave(const char *func, const QByteArray & st, bool pr)
 {
     QString fw;
     if (pr) {
@@ -450,13 +368,8 @@ void MainWindow::LogSave(const char *func, const QByteArray & st, bool rxd, bool
         fw.append(func);
         fw.append("] ");
     }
-    //int len = st.length();
-    //fw.append(" (" + QString::number(len, 10) + ")");
-    //if (rxd) fw.append("> ");
-    //    else fw.append("< ");
-    if (hex) fw.append(st.toHex(' '));
-        else fw.append(st);
-//    if (fw.indexOf("\r\n", 0) != -1) fw.truncate(st.length() - 2);
+    fw.append(st);
+
     ui->log->append(fw);//to log screen
 }
 //-----------------------------------------------------------------------
@@ -481,8 +394,6 @@ void MainWindow::on_connect()
         ui->actionDISCONNECT->setEnabled(true);
 
         ui->stx->setEnabled(true);
-        //ui->hexBox->setEnabled(true);
-        ui->asciiBox->setEnabled(true);
         ui->crlfBox->setEnabled(true);
         rxData.clear();
     } else {
@@ -509,8 +420,6 @@ void MainWindow::on_disconnect()
     ui->actionDISCONNECT->setEnabled(false);
 
     ui->stx->setEnabled(false);
-    //ui->hexBox->setEnabled(false);
-    ui->asciiBox->setEnabled(false);
     ui->crlfBox->setEnabled(false);
 
 }
@@ -520,23 +429,16 @@ void MainWindow::slotWrite(QByteArray & mas)
     if (!sdev) return;
 
     if (sdev->isOpen()) {
-        if (hex) {
-            sdev->write(mas);
-        } else {
-            QString m(mas);
-            sdev->write(m.toLocal8Bit());
-        }
-
-        LogSave(nullptr, mas, false, false);
-        //rxData.clear();
+        QString m(mas);
+        sdev->write(m.toLocal8Bit());
+        LogSave(nullptr, mas, false);
     }
 }
 //-----------------------------------------------------------------------
 void MainWindow::on_ack_clicked()
 {
     if (sdev) {
-        QByteArray m(keyArr[KEY_ACK]);
-        hex = true;
+        QByteArray m; m.append(keyArr[KEY_ACK]);
         emit sigWrite(m);
     } else {
         keyId = KEY_ACK;
@@ -547,8 +449,7 @@ void MainWindow::on_ack_clicked()
 void MainWindow::on_nak_clicked()
 {
     if (sdev) {
-        QByteArray m(keyArr[KEY_NAK]);
-        hex = true;
+        QByteArray m; m.append(keyArr[KEY_NAK]);
         emit sigWrite(m);
     } else {
         keyId = KEY_NAK;
@@ -559,8 +460,7 @@ void MainWindow::on_nak_clicked()
 void MainWindow::on_enq_clicked()
 {
     if (sdev) {
-        QByteArray m(keyArr[KEY_ENQ]);
-        hex = true;
+        QByteArray m; m.append(keyArr[KEY_ENQ]);
         emit sigWrite(m);
     } else {
         keyId = KEY_ENQ;
@@ -571,8 +471,7 @@ void MainWindow::on_enq_clicked()
 void MainWindow::on_eot_clicked()
 {
     if (sdev) {
-        QByteArray m(keyArr[KEY_EOT]);
-        hex = true;
+        QByteArray m; m.append(keyArr[KEY_EOT]);
         emit sigWrite(m);
     } else {
         keyId = KEY_EOT;
@@ -586,16 +485,7 @@ void MainWindow::on_answer_clicked()
 //02 55 00 a0 03 f6
 
     QByteArray sb(ui->stx->text().toLocal8Bit());
-    QByteArray tmp; tmp.clear();
-
-    if (ui->hexBox->checkState() == Qt::Checked) {
-        hex = true;
-        sb = sb.toUpper();
-        hexTobin(sb.data(), &tmp);
-    } else {
-        hex = false;
-        tmp = sb;
-    }
+    QByteArray tmp(sb);
 
     if (ui->crlfBox->checkState() == Qt::Checked) tmp.append(cr_lf);
     if (tmp.length()) emit sigWrite(tmp);
@@ -605,8 +495,7 @@ void MainWindow::on_answer_clicked()
 void MainWindow::on_any_clicked()
 {
     if (sdev) {
-        QByteArray m(keyArr[KEY_KEY]);
-        hex = true;
+        QByteArray m; m.append(keyArr[KEY_KEY]);
         emit sigWrite(m);
     } else {
         keyId = KEY_KEY;
@@ -681,7 +570,6 @@ int ret = -1;
 //-----------------------------------------------------------------------
 void MainWindow::ReadData()
 {
-//bool eol = false;
 int ix = -1;
 
     while (!sdev->atEnd()) {
@@ -689,35 +577,15 @@ int ix = -1;
         ix = chkDone(&rxData);
         if (ix != -1) break;
     }
-        /*if (rxData.length()) {
-            if (ui->asciiBox->checkState() == Qt::Checked) {
-                hex = false;
-                eol = chkDone(&rxData);
-                if (!eol) return;
-            } else {
-                eol = true;
-                hex = true;
-            }
-            if (eol) {
-                LogSave(nullptr, rxData, true, false);
-                rxData.clear();
-            }
-        }*/
     if (ix != -1) {
-        hex = false;
         int pos = 0;
         QByteArray dat, line = rxData.mid(0, ix);
-        dat = line;
         if ((pos = line.indexOf("\r\n>", 0)) == -1) {
             if ((pos = line.indexOf("\r\n", 0)) != -1) line.remove(pos, 2);
         }
-        LogSave(nullptr, line, true, false);
-        if (rxData.length() > (ix + 1)) {
-            dat = rxData.mid(ix, -1);
-            //rxData.clear();
-            rxData = dat;
-        } else rxData.clear();
-
+        LogSave(nullptr, line, false);
+        if (rxData.length() > (ix + 1)) rxData.remove(0, ix);
+                                   else rxData.clear();
     }
 
 }
@@ -729,6 +597,29 @@ void MainWindow::slotError(QSerialPort::SerialPortError serialPortError)
         throw TheError(MyError);
     }
 }
+
+//**************************************************************************************
+
+#ifdef SET_MOUSE_KEY
+//-------------------------------------------------------------------------------------
+void MainWindow::slotRM(int x, int y)
+{
+    QMessageBox::information(this, "Mouse key", "\nX,Y = " + QString::number(x, 10) + "," + QString::number(y, 10) + "\n");
+}
+//-------------------------------------------------------------------------------------
+void MainWindow::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::RightButton) {
+        e->accept();
+        //emit sigRM(e->pos().x(), e->pos().y());
+        QMessageBox::information(this, "Right key", "\nX,Y = " + QString::number(e->pos().x(), 10) + "," + QString::number(e->pos().y(), 10) + "\n");
+    } else if (e->button() == Qt::MiddleButton) {
+        e->accept();
+        QMessageBox::information(this, "Middle key", "\nX,Y = " + QString::number(e->pos().x(), 10) + "," + QString::number(e->pos().y(), 10) + "\n");
+        //emit sigRM(e->pos().x(), e->pos().y());
+    }
+}
+#endif
 
 //**************************************************************************************
 //                            Tray
@@ -800,26 +691,6 @@ void MainWindow::closeEvent(QCloseEvent *evt)
 */
 //**************************************************************************************
 
-#ifdef SET_MOUSE_KEY
-//-------------------------------------------------------------------------------------
-void MainWindow::slotRM(int x, int y)
-{
-    QMessageBox::information(this, "Mouse key", "\nX,Y = " + QString::number(x, 10) + "," + QString::number(y, 10) + "\n");
-}
-//-------------------------------------------------------------------------------------
-void MainWindow::mousePressEvent(QMouseEvent *e)
-{
-    if (e->button() == Qt::RightButton) {
-        e->accept();
-        //emit sigRM(e->pos().x(), e->pos().y());
-        QMessageBox::information(this, "Right key", "\nX,Y = " + QString::number(e->pos().x(), 10) + "," + QString::number(e->pos().y(), 10) + "\n");
-    } else if (e->button() == Qt::MiddleButton) {
-        e->accept();
-        QMessageBox::information(this, "Middle key", "\nX,Y = " + QString::number(e->pos().x(), 10) + "," + QString::number(e->pos().y(), 10) + "\n");
-        //emit sigRM(e->pos().x(), e->pos().y());
-    }
-}
-#endif
 
 
 

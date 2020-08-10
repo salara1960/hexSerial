@@ -64,23 +64,10 @@
 #define SET_DEBUG
 #define SET_MOUSE_KEY
 
-
 #define max_buf 2048
 
-#define STX  0x02
-#define ETX  0x03
-#define EOT  0x04
-#define ENQ  0x05
-#define ACK  0x06
-#define DLE  0x10
-#define NAK  0x15
-#define ESC  0x1B
-#define LF   0x0A
-#define CR   0x0D
-
 #define keyCnt 5
-#define deepCnt 2
-#define sendkeyCnt 6
+
 
 typedef enum {
     KEY_ACK = 0,
@@ -127,13 +114,9 @@ public slots:
     void KeyProg(QByteArray);
     int initSerial();
     uint32_t crc32(const uint32_t crc_origin, const uint8_t *buf, const uint32_t size);
-#ifndef __WIN32
-    void setSPEED(int fd, const void *ptr);
-#endif
     void deinitSerial();
-    void LogSave(const char *, const QByteArray &, bool, bool);
+    void LogSave(const char *, const QByteArray &, bool);
     void About();
-    //void Config();
     unsigned char myhextobin(const char *);
     void hexTobin(const char *, QByteArray *);
     void clrLog();
@@ -186,15 +169,14 @@ private:
     QSerialPort *sdev;
     QByteArray rxData, txData;
     QString sdevName, sdevConf;
-    bool hex, first, con;
+    bool first, con;
     //KeyProg
     int keyId;
-    QByteArray keyArr[keyCnt];
+    QString keyArr[keyCnt];
     pwdDialog *keys;
     QPushButton *keyAdr[keyCnt];
-    const QString keyName[keyCnt] = {"ACK", "NAK", "ENQ", "EOT", "KEY"};
-    const char defKeys[keyCnt] = {ACK, NAK, ENQ, EOT, LF};
-    const char defSendKeys[sendkeyCnt] = {STX, 0x55, 0x00, 0x00, ETX, 0x56};//(02 55 00 a0 03 f6}
+    const QString keyName[keyCnt] = {"Stop", "Start", "Dirs", "Free", "Info"};
+    const QString keyData[keyCnt] = {"#", "m1\r\n", "$dirs\r\n", "$free\r\n", "#149\r\n"};
     //settings
     SettingsDialog *conf = nullptr;
     uint32_t Tik, ms10;
