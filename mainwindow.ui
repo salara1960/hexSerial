@@ -616,8 +616,8 @@ background-color:rgb(206, 206, 206)}</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: qlineargradient(spread:pad, x1:0.521739, y1:0.00568182, x2:0.516565, y2:0.914409, stop:0 rgba(70, 70, 70, 255), stop:1 rgba(255, 255, 255, 255));
-color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, stop:0 rgba(15, 25, 35, 255), stop:1 rgba(255, 255, 255, 255));</string>
+       <string notr="true">background-color: qlineargradient(spread:pad, x1:0.521739, y1:0.00568182, x2:0.516565, y2:0.914409, stop:0 rgba(130, 130, 130, 255), stop:1 rgba(255, 255, 255, 255));
+color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, stop:0 rgba(10, 25, 45, 255), stop:1 rgba(255, 255, 255, 255));</string>
       </property>
       <property name="text">
        <string/>
@@ -1255,7 +1255,7 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
   <action name="actionProgApi">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/png/prog.png</normaloff>:/png/prog.png</iconset>
+     <normaloff>:/png/flash.png</normaloff>:/png/flash.png</iconset>
    </property>
    <property name="text">
     <string>ProgApi</string>

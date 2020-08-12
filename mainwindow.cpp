@@ -744,7 +744,7 @@ void MainWindow::slot_mkList(int8_t md)
 
     mkList(md);
     ui->status->clear();
-    ui->status->setText("Make list from " + QString::number(all_cmd_in_list, 10) + " commands for mode '" + all_mode[md] +"' done");
+    ui->status->setText("Make list with #" + QString::number(all_cmd_in_list, 10) + " commands for mode '" + all_mode[md] +"' done");
 
 }
 //--------------------------------------------------------------------------------

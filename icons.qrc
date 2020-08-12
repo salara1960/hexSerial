@@ -19,5 +19,6 @@
 	<file>png/prog.png</file>
 	<file>png/down.png</file>
 	<file>png/comp.png</file>
+	<file>png/flash.png</file>
     </qresource>
 </RCC>
