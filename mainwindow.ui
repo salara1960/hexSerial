@@ -646,6 +646,10 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
     <addaction name="separator"/>
     <addaction name="actionFile"/>
     <addaction name="separator"/>
+    <addaction name="actionGetApi"/>
+    <addaction name="actionProgApi"/>
+    <addaction name="actionCompApi"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuABOUT">
     <property name="title">
@@ -1110,6 +1114,9 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
    <addaction name="actionPORT"/>
    <addaction name="actionCLEAR"/>
    <addaction name="actionFile"/>
+   <addaction name="actionGetApi"/>
+   <addaction name="actionProgApi"/>
+   <addaction name="actionCompApi"/>
    <addaction name="actionVERSION"/>
   </widget>
   <action name="actionPORT">
@@ -1234,6 +1241,33 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
     <font>
      <pointsize>11</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionGetApi">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/png/down.png</normaloff>:/png/down.png</iconset>
+   </property>
+   <property name="text">
+    <string>GetApi</string>
+   </property>
+  </action>
+  <action name="actionProgApi">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/png/prog.png</normaloff>:/png/prog.png</iconset>
+   </property>
+   <property name="text">
+    <string>ProgApi</string>
+   </property>
+  </action>
+  <action name="actionCompApi">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/png/comp.png</normaloff>:/png/comp.png</iconset>
+   </property>
+   <property name="text">
+    <string>CompApi</string>
    </property>
   </action>
  </widget>

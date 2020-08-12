@@ -16,5 +16,8 @@
 	<file>png/eyeShow.png</file>
 	<file>png/eyeHide.png</file>
 	<file>png/folder.png</file>
+	<file>png/prog.png</file>
+	<file>png/down.png</file>
+	<file>png/comp.png</file>
     </qresource>
 </RCC>

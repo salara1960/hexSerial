@@ -47,6 +47,8 @@ const QString close_pic   = "png/close.png";
 const QByteArray cr_lf = "\r\n";
 
 
+
+
 //  Макрос для промежуточного подсчета контрольной суммы CRC32
 #define CRC32(crc, ch) ((crc >> 8) ^ crc32_tab[(crc ^ (ch)) & 0xff])
 
@@ -91,6 +93,8 @@ static const uint32_t crc32_tab[256] = {
 };
 
 
+
+
 //******************************************************************************************************
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), conf(new SettingsDialog)
@@ -123,6 +127,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     Tik = 0;
     ms10 = 0;
 
+    //-----   for cmds  -------
+
+    cmd_list.clear();
+    to_dev_data.clear();
+
+    //-------------------------
+
     tmr_sec = startTimer(10);// 10 msec.
     if (tmr_sec <= 0) {
         MyError |= 2;//start_timer error
@@ -138,6 +149,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->actionDISCONNECT, &QAction::triggered, this, &MainWindow::on_disconnect);
     connect(ui->actionCLEAR,      &QAction::triggered, this, &MainWindow::clrLog);
     connect(ui->actionFile,       &QAction::triggered, this, &MainWindow::getFile);
+    connect(ui->actionGetApi,     &QAction::triggered, this, &MainWindow::getApi);
+    connect(ui->actionProgApi,    &QAction::triggered, this, &MainWindow::progApi);
+    connect(ui->actionCompApi,    &QAction::triggered, this, &MainWindow::compApi);
 
     connect(this, &MainWindow::sigConn, this, &MainWindow::on_connect);
     connect(this, &MainWindow::sigDisc, this, &MainWindow::on_disconnect);
@@ -178,6 +192,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->crlfBox->setEnabled(false);
     //
     connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
+    connect(this, &MainWindow::sig_mkList, this, &MainWindow::slot_mkList);
 
 
 #ifdef SET_MOUSE_KEY
@@ -455,53 +470,6 @@ void MainWindow::on_answer_clicked()
 
 }
 //-----------------------------------------------------------------------
-/*
-void MainWindow::on_ack_clicked()
-{
-    emit snd_ind(KEY_ACK);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_nak_clicked()
-{
-    emit snd_ind(KEY_NAK);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_enq_clicked()
-{
-    emit snd_ind(KEY_ENQ);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_eot_clicked()
-{
-    emit snd_ind(KEY_EOT);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_any_clicked()
-{
-    emit snd_ind(KEY_KEY);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_info_clicked()
-{
-    emit snd_ind(KEY_INFO);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_deep_clicked()
-{
-    emit snd_ind(KEY_DEEP);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_crc_clicked()
-{
-    emit snd_ind(KEY_CRC);
-}
-//-----------------------------------------------------------------------
-void MainWindow::on_one_clicked()
-{
-    emit snd_ind(KEY_ONE);
-}
-*/
-//-----------------------------------------------------------------------
 void MainWindow::keyPrs()
 {
     int key = -1;
@@ -709,7 +677,376 @@ void MainWindow::closeEvent(QCloseEvent *evt)
 }
 */
 //**************************************************************************************
+//----------------------------------------------------------------------
+//   Функция возвращает контрольную сумму CRC8 массива байт
+//
+uint8_t MainWindow::crc8(const uint8_t *uk, uint16_t bytes)
+{
+uint8_t crc = 0;
 
+    for (uint16_t i = 0; i < bytes; i++) crc += *(uk + i);
+
+    return crc;
+}
+//--------------------------------------------------------------------------------
+void MainWindow::initList()
+{
+    cmd_list_ind = 0;
+    total_cmd_list = 0;
+    all_cmd_in_list = 0;
+    cmd_list.clear();
+    mode = noneCmd;
+}
+//--------------------------------------------------------------------------------
+void MainWindow::getApi()
+{
+    initList();
+    mode = downCmd;
+    emit sig_mkList(mode);
+}
+//--------------------------------------------------------------------------------
+void MainWindow::progApi()
+{
+    initList();
+    mode = progCmd;
+    emit sig_mkList(mode);
+}
+//--------------------------------------------------------------------------------
+void MainWindow::compApi()
+{
+    initList();
+    mode = compCmd;
+    emit sig_mkList(mode);
+}
+//--------------------------------------------------------------------------------
+void MainWindow::slot_mkList(int8_t md)
+{
+    mkList(md);
+    ui->status->clear();
+    ui->status->setText("Make list from " + QString::number(all_cmd_in_list, 10) + " commands for mode '" + all_mode[md] +"' done");
+
+}
+//--------------------------------------------------------------------------------
+//  Функция создает элементарную команду-запрос к датчику.
+//  Функция возвращает количество байт команды при успешном выполнении функции,
+//  в противном случае возвращет ноль
+//
+uint16_t MainWindow::mkFrame(uint8_t cmd, uint32_t addr, uint8_t len, uint8_t *in, uint8_t *out, int *ack_len)
+{
+uint16_t ret = 0;
+cmd_hdr_t hd;
+uint8_t crc = 0;
+int alen = 5;
+
+    memset((uint8_t *)&hd, 0, sizeof(cmd_hdr_t));
+    hd.pre = 0xAA;
+    hd.rzv = 0x00;
+    hd.sn = HTONS(serNum);
+    ret += sizeof(cmd_hdr_t);
+    if (len) hd.hd.inc = 1;
+
+    switch (cmd) {
+        case readCmd://команда "читать SAS_Registers" (адреса 0x00..0xff)
+            memcpy(out, &hd.pre, ret);
+            out[ret++] = (uint8_t)addr;
+            out[ret++] = len;
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+            alen += 4;
+            if (len) alen += (len << 2);
+        break;
+        case writeCmd://WR_REG:
+            hd.hd.rw = 1;
+            hd.hd.inc = 0;
+            memcpy(out, &hd.pre, ret);
+            out[ret++] = (uint8_t)addr;//addr : 0..0xff
+            out[ret++] = 0;//len must bee = 0 !!!
+            if (in) memcpy(out + ret, in, sizeof(uint32_t));// this DWORD write to SAS_Register
+            ret += sizeof(uint32_t);
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+        break;
+        case getCmd://команда "читать flash-память" (адреса 0x180000..) - только в режиме загрузчика !
+            hd.hd.inc = 1;
+            hd.hd.addr_ext = 1;
+            memcpy(out, &hd.pre, ret);
+            memcpy(out + ret, (uint8_t *)&addr, sizeof(uint32_t));
+            ret += sizeof(uint32_t);
+            out[ret++] = len;
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+            alen += 4;
+            if (len) alen += (len << 2);
+        break;
+        case putCmd://PUT_ADR:
+            hd.hd.rw = 1;
+            hd.hd.addr_ext = 1;
+            memcpy(out, &hd.pre, ret);
+            memcpy(out + ret, (uint8_t *)&addr, sizeof(uint32_t));
+            ret += sizeof(uint32_t);
+            out[ret++] = len;//0;//len must bee = 0 !!!
+            if (in) {
+                memcpy(out + ret, in, sizeof(uint32_t) * (len + 1));// this DWORDs write to flash memory
+                ret += sizeof(uint32_t) * (len + 1);
+            }
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+        break;
+        case bootCmd://команда "перевести датчик в режим загрузчика" (для последующей записи/чтении flas-памяти)
+            hd.hd.ld = 1;
+            hd.hd.rw = 1;
+            hd.hd.inc = 0;
+            memcpy(out, &hd.pre, ret);
+            out[ret++] = (uint8_t)addr;
+            out[ret++] = 0;//len;
+            memset(&out[ret], 0, sizeof(uint32_t));
+            ret += sizeof(uint32_t);
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+        break;
+        case rstCmd://команда "перегрузить датчик"
+            hd.hd.rst = 1;
+            hd.hd.rw = 1;
+            hd.hd.inc = 0;
+            memcpy(out, &hd.pre, ret);
+            out[ret++] = (uint8_t)addr;
+            out[ret++] = 0;//len;
+            memset(&out[ret], 0, sizeof(uint32_t));
+            ret += sizeof(uint32_t);
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+        break;
+        case textCmd://команда "переход в текствый режим обмена с датчиком"
+            hd.hd.text = 1;
+            hd.hd.rw = 1;
+            hd.hd.inc = 0;
+            memcpy(out, &hd.pre, ret);
+            out[ret++] = (uint8_t)addr;
+            out[ret++] = 0;//len;
+            memset(&out[ret], 0, sizeof(uint32_t));
+            ret += sizeof(uint32_t);
+            crc = crc8(out + 1, ret - 1);
+            out[ret++] = crc;
+        break;
+        case stopCmd://команда "перевести датчик в режим останова"
+            ret = strlen(to_stop);
+            memcpy(out, to_stop, ret);
+            alen = -1;
+        break;
+        case startCmd://команда "выполнить однократную выдачу данных из датчика в тестовом режиме обмена"
+            ret = strlen(to_start);
+            memcpy(out, to_start, ret);
+            alen = -1;
+        break;
+        case binCmd://команда "перевести датчик в бинарный режим обмена"
+            ret = strlen(to_bin);
+            memcpy(out, to_bin, ret);
+            alen = -1;
+        break;
+
+            default : ret = 0;
+    }
+
+    *ack_len = alen;
+
+    return ret;
+}
+//----------------------------------------------------------------------
+//   Функция выполняет процедуру добавления в список элементарных команд
+//    для дальнейшей их последовательной выдаче датчику
+//
+void MainWindow::addToList(record_t *rc, uint8_t fin)
+{
+    cmd_list_ind++;
+    cmd_list << *rc;
+    if (fin) {
+        all_cmd_in_list = total_cmd_list = cmd_list_ind + 1;
+        cmd_list_ind = 0;
+    }
+}
+//----------------------------------------------------------------------
+//   Функция формирует список элементарных команд для датчика,
+//     возвращая количество команд в списке или ноль если он пуст
+//
+int8_t MainWindow::mkList(uint8_t cmd)
+{
+cmd_list_ind = -1;
+total_cmd_list = 0;
+record_t rec;
+
+    memset((uint8_t *)&rec, 0, sizeof(record_t));
+    rec.data = nullptr;
+
+    cmd_list.clear();
+
+    switch (cmd) {
+        case compCmd:
+        case downCmd:
+            rec.cmd = stopCmd;//STOP
+            addToList(&rec, 0);
+            //
+            rec.cmd = binCmd;//BIN
+            addToList(&rec, 0);
+            //
+            rec.cmd = readCmd;//read:52 - reaad dev_type
+            rec.adr = DEV_TYPE_ADDR;//0x52;
+            rec.len = 0;
+            addToList(&rec, 0);
+            //
+            rec.cmd = readCmd;//read:0 - reaad SN
+            rec.adr = 0;
+            rec.len = 0;
+            addToList(&rec, 0);
+            //
+            rec.cmd = bootCmd;//BOOT
+            addToList(&rec, 0);
+            //
+            rec.cmd = getCmd;//GET - read flash memory by adr
+            rec.adr = API_HDR_ADDR_DEF + TEST_SHIFT_ADDR;
+            rec.len = (sizeof(apiHdrData_t) >> 2) - 1;//6 - 1;//читаем 7 слов размерностью uint32_t : версия упаковки, 2 слова маркера, адрес API, длинна API, CRC32 API
+            addToList(&rec, 0);
+            //
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = getCmd;//GET - read flash memory by adr
+            rec.repeat = 1;
+            rec.adr = apiAddr;//API_ADDR_DEF;
+            rec.len = apiLen;//255;
+            addToList(&rec, 0);
+            //
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = rstCmd;//RESET
+            addToList(&rec, 0);
+            //
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = textCmd;//TEXT
+            addToList(&rec, 0);
+            //
+            rec.cmd = startCmd;//START
+            addToList(&rec, 1);
+        break;
+        case progCmd:
+            //
+            rec.cmd = stopCmd;//STOP
+            addToList(&rec, 0);
+            //
+            rec.cmd = binCmd;//BIN
+            addToList(&rec, 0);
+            //
+            rec.cmd = readCmd;//read:52 - read dev_type
+            rec.adr = DEV_TYPE_ADDR;//0x52;
+            rec.len = 0;
+            addToList(&rec, 0);
+            //
+            rec.cmd = readCmd;//read:0 - reaad SN
+            rec.adr = 0;
+            rec.len = 0;
+            addToList(&rec, 0);
+            //
+            rec.cmd = bootCmd;//BOOT
+            addToList(&rec, 0);
+            //
+            rec.cmd = getCmd;//GET - read header api from flash
+            rec.adr = API_HDR_ADDR_DEF + TEST_SHIFT_ADDR;
+            rec.len = (sizeof(apiHdrData_t) >> 2) - 1;//читаем 7 слов : версия упаковки, 2 слова маркера, адрес API, длинна API, CRC32 API
+            addToList(&rec, 0);
+            //
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = putCmd;//PUT - write to flash
+            rec.adr = API_HDR_ADDR_DEF + TEST_SHIFT_ADDR;
+            rec.len = (sizeof(apiHdrData_t) >> 2) - 1;//len must bee set in dword - 1
+            rec.data = &to_dev_data;
+            addToList(&rec, 0);
+
+//!!!!!!!!!!!!!!!!!!  Собственно запись api  !!!!!!!!!!!!!!!!!!!!!!!!!
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = putCmd;//PUT - write to flash memory API_BODY!!!
+            rec.repeat = 1;
+            rec.adr = apiAddr;//API_ADDR_DEF;
+            rec.len = apiLen;//255;
+            rec.data = &to_dev_data;
+            addToList(&rec, 0);
+
+//-----------   Чтение записанного заголовка api из флэш   ----------------
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = getCmd;//GET - read flash memory by adr
+            rec.adr = API_HDR_ADDR_DEF + TEST_SHIFT_ADDR;
+            rec.len = (sizeof(apiHdrData_t) >> 2) - 1;//читаем 7 слов : версия упаковки, 2 слова маркера, адрес API, длинна API, CRC32 API
+            addToList(&rec, 0);
+//-----------   Чтение записаной api из флэш для сравнения с файлом   ----------------
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = getCmd;//GET - read flash memory by adr
+            rec.repeat = 1;
+            rec.adr = apiAddr;//API_ADDR_DEF;
+            rec.len = apiLen;//255;
+            addToList(&rec, 0);
+//------------------------------------------------------------
+
+            memset((uint8_t *)&rec, 0, sizeof(record_t));
+            rec.cmd = rstCmd;//RESET
+            addToList(&rec, 0);
+            //
+            rec.cmd = textCmd;//TEXT
+            addToList(&rec, 0);
+            //
+            rec.cmd = startCmd;//START
+            addToList(&rec, 1);
+        break;
+        case readCmd://read SAS_Registers , 0x00..0xff
+            rec.cmd = readCmd;
+            rec.adr = (uint8_t)regAddr;
+            rec.len = regLen;
+            addToList(&rec, 1);
+        break;
+        case writeCmd://qrite to SAS_Registers by 0x00..0xff DWORD from regLen
+            rec.cmd = writeCmd;
+            rec.adr = (uint8_t)regAddr;
+            rec.len = 0;//regLen;
+            rec.data = &to_dev_data;
+            addToList(&rec, 1);
+        break;
+        case rstCmd://RD_REG:// = 0,
+            rec.cmd = rstCmd;//RESET
+            addToList(&rec, 1);
+        break;
+        case textCmd:
+            rec.cmd = textCmd;//RESET
+            addToList(&rec, 1);
+        break;
+        case binCmd:
+            rec.cmd = binCmd;//BIN
+            addToList(&rec, 1);
+        break;
+        case stopCmd:
+            rec.cmd = stopCmd;//STOP
+            addToList(&rec, 1);
+        break;
+        case startCmd:
+            rec.cmd = startCmd;//START
+            addToList(&rec, 1);
+        break;
+        case bootCmd:
+            rec.cmd = bootCmd;//BOOT
+            addToList(&rec, 1);
+        break;
+        case getCmd:
+            rec.cmd = getCmd;//read flash memory by adr
+            rec.adr = regAddr;//adr must bee >= API_HDR_ADDR_DEF
+            rec.len = regLen;//0..0xff
+            addToList(&rec, 1);
+        break;
+        case putCmd:
+            rec.cmd = putCmd;//write flash memory by adr
+            rec.adr = regAddr;// >= API_HDR_ADDR_DEF
+            rec.len = regLen;//0..0xff
+            rec.data = &to_dev_data;
+            addToList(&rec, 1);
+        break;
+
+    }
+
+    return total_cmd_list;
+
+}
 
 
 
