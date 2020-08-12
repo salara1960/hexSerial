@@ -366,6 +366,8 @@ private:
     uint8_t regLen;
     uint32_t apiAddr;
     uint32_t apiLen;
+    apiBuf_t apiBuf;
+    uint8_t devErr;
     const QByteArray to_stop = "#\r\n";
     const QByteArray to_start = "m1\r\n";
     const QByteArray to_bin = "#082;bin\r\n";

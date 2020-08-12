@@ -131,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     cmd_list.clear();
     to_dev_data.clear();
+    apiBuf.data = nullptr;
 
     //-------------------------
 
@@ -207,6 +208,8 @@ MainWindow::~MainWindow()
     if (conf) delete conf;
     if (keys) delete keys;
     if (pTmp) free(pTmp);
+
+    if (apiBuf.data) delete apiBuf.data;
 
     killTimer(tmr_sec);
     delete ui;
@@ -696,6 +699,8 @@ void MainWindow::initList()
     all_cmd_in_list = 0;
     cmd_list.clear();
     mode = noneCmd;
+    if (apiBuf.data) delete apiBuf.data;
+    apiBuf.len = 0;
 }
 //--------------------------------------------------------------------------------
 void MainWindow::getApi()
@@ -721,6 +726,22 @@ void MainWindow::compApi()
 //--------------------------------------------------------------------------------
 void MainWindow::slot_mkList(int8_t md)
 {
+    switch (md) {
+        case progCmd:
+        case compCmd:
+        case downCmd:
+            apiBuf.size = 1;
+            apiBuf.data = new QByteArray();
+            apiBuf.len = 0;
+            if (apiBuf.data == nullptr) {
+                devErr = errGetMem;
+                ui->status->clear();
+                ui->status->setText("Error #" + QString::number(devErr, 10) + " '" + all_err_str[devErr] +"'");
+                return;
+            }
+        break;
+    }
+
     mkList(md);
     ui->status->clear();
     ui->status->setText("Make list from " + QString::number(all_cmd_in_list, 10) + " commands for mode '" + all_mode[md] +"' done");
