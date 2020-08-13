@@ -45,6 +45,7 @@
 #define SET_DEBUG
 #define SET_MOUSE_KEY
 
+#define BUF_SIZE         4096
 #define max_buf          2048
 #define keyCnt           9
 #define MAX_SAS_REG      43
@@ -156,7 +157,7 @@ typedef struct {
     uint8_t repeat;
     uint32_t adr;
     uint8_t len;
-    QByteArray *data;
+    uint8_t *data;
 } record_t;
 #pragma pack(pop)
 
@@ -226,7 +227,8 @@ public slots:
     int initSerial();
     uint32_t crc32(const uint32_t crc_origin, const uint8_t *buf, const uint32_t size);
     void deinitSerial();
-    void LogSave(const char *, const QByteArray &, bool);
+    void LogSave(const char *, QByteArray &, bool);
+    void LogSave(const char *, const QString &, bool);
     void About();
     unsigned char myhextobin(const char *);
     void hexTobin(const char *, QByteArray *);
@@ -241,11 +243,17 @@ public slots:
     void setTrayIconActions();
     void showTrayIcon();
     */
+    void qstr(const char *buf, uint16_t len, QString *out);
+    int writes(const char *data, int len);
+    uint32_t get10ms();
+    uint32_t get_tmr(uint32_t);
+    int check_tmr(uint32_t);
     void initList();
     uint8_t crc8(const uint8_t *uk, uint16_t bytes);
     uint16_t mkFrame(uint8_t cmd, uint32_t addr, uint8_t len, uint8_t *in, uint8_t *out, int *ack_len);
     void addToList(record_t *rc, uint8_t fin);
     int8_t mkList(uint8_t cmd);
+    void prnFrame(const uint8_t *buf, uint16_t len, QString *st, record_t *rc);
 
 #ifdef SET_MOUSE_KEY
     //Press mouse button
@@ -264,7 +272,11 @@ private slots:
     void getApi();
     void progApi();
     void compApi();
+    void crc32File();
     void slot_mkList(int8_t);
+    void slot_goProc(int8_t);
+    void slot_Ready();
+    void slot_timeOutAck();
 
     void slotWrite(QByteArray &);
 
@@ -274,8 +286,9 @@ signals:
     void sigButtonData();
     void sigConn();
     void sigDisc();
-
-    void snd_ind(int);
+    void sig_goProc(int8_t);
+    void sig_Ready();
+    void sig_timeOutAck();
 
     void sig_mkList(int8_t);
 
@@ -360,14 +373,22 @@ private:
     int8_t total_cmd_list = 0;
     int8_t all_cmd_in_list = 0;
     uint8_t mode = noneCmd;
-    QByteArray to_dev_data;
     uint16_t serNum = SER_NUM;
     uint32_t regAddr;
     uint8_t regLen;
     uint32_t apiAddr;
     uint32_t apiLen;
+    uint32_t apiSnd;
     apiBuf_t apiBuf;
-    uint8_t devErr;
+    uint8_t devErr, cmd;
+    uint32_t tmr_cmd, wait_ack;
+    record_t rec;
+    bool getrec, patch, goCmd;
+    int ackLen;
+    char buff[BUF_SIZE + 8] = {0};
+    char ibuff[BUF_SIZE + 8] = {0};
+    uint8_t to_dev_data[TO_DEV_SIZE];
+    QString chap;
     const QByteArray to_stop = "#\r\n";
     const QByteArray to_start = "m1\r\n";
     const QByteArray to_bin = "#082;bin\r\n";

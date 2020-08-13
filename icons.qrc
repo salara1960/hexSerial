@@ -20,5 +20,6 @@
 	<file>png/down.png</file>
 	<file>png/comp.png</file>
 	<file>png/flash.png</file>
+	<file>png/hash.png</file>
     </qresource>
 </RCC>

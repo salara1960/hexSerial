@@ -45,7 +45,7 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>40</height>
+        <height>34</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -57,7 +57,7 @@
       <property name="font">
        <font>
         <family>Sans Serif</family>
-        <pointsize>11</pointsize>
+        <pointsize>10</pointsize>
         <italic>false</italic>
        </font>
       </property>
@@ -114,31 +114,14 @@ background-color:rgb(226, 226, 226)}</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="0" colspan="3">
+    <item row="1" column="0" colspan="2">
      <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
-    <item row="2" column="0" rowspan="10" colspan="2">
-     <widget class="QTextEdit" name="log">
-      <property name="font">
-       <font>
-        <family>Sans Serif</family>
-        <pointsize>11</pointsize>
-        <italic>false</italic>
-       </font>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::WinPanel</enum>
-      </property>
-      <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarAlwaysOn</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
+    <item row="1" column="2" rowspan="2">
      <widget class="QPushButton" name="ack">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -187,6 +170,23 @@ background-color:rgb(206, 206, 206)}</string>
       </property>
       <property name="shortcut">
        <string>F2</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" rowspan="10" colspan="2">
+     <widget class="QTextEdit" name="log">
+      <property name="font">
+       <font>
+        <family>Sans Serif</family>
+        <pointsize>10</pointsize>
+        <italic>false</italic>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::WinPanel</enum>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOn</enum>
       </property>
      </widget>
     </item>
@@ -644,12 +644,10 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
     <addaction name="actionDISCONNECT"/>
     <addaction name="actionCLEAR"/>
     <addaction name="separator"/>
-    <addaction name="actionFile"/>
-    <addaction name="separator"/>
     <addaction name="actionGetApi"/>
     <addaction name="actionProgApi"/>
     <addaction name="actionCompApi"/>
-    <addaction name="separator"/>
+    <addaction name="actionCRC32"/>
    </widget>
    <widget class="QMenu" name="menuABOUT">
     <property name="title">
@@ -1113,10 +1111,10 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
    <addaction name="actionDISCONNECT"/>
    <addaction name="actionPORT"/>
    <addaction name="actionCLEAR"/>
-   <addaction name="actionFile"/>
    <addaction name="actionGetApi"/>
    <addaction name="actionProgApi"/>
    <addaction name="actionCompApi"/>
+   <addaction name="actionCRC32"/>
    <addaction name="actionVERSION"/>
   </widget>
   <action name="actionPORT">
@@ -1230,6 +1228,9 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
    </property>
   </action>
   <action name="actionFile">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/png/folder.png</normaloff>:/png/folder.png</iconset>
@@ -1268,6 +1269,15 @@ color: qlineargradient(spread:pad, x1:0.527609, y1:1, x2:0.532739, y2:0.397727, 
    </property>
    <property name="text">
     <string>CompApi</string>
+   </property>
+  </action>
+  <action name="actionCRC32">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/png/hash.png</normaloff>:/png/hash.png</iconset>
+   </property>
+   <property name="text">
+    <string>CRC32</string>
    </property>
   </action>
  </widget>

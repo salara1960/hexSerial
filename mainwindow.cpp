@@ -30,7 +30,8 @@
 //const QString vers = "1.2";//10.07.2020
 //const QString vers = "1.3";//07.08.2020
 //const QString vers = "1.4";//09.08.2020  !!! +++ !!!
-const QString vers = "1.5";//10.08.2020
+//const QString vers = "1.5";//10.08.2020
+const QString vers = "1.6";//13.08.2020
 
 
 
@@ -126,12 +127,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     pTmp = nullptr;
     Tik = 0;
     ms10 = 0;
+    txData.clear();
+    rxData.clear();
 
     //-----   for cmds  -------
 
     cmd_list.clear();
-    to_dev_data.clear();
+    chap.clear();
     apiBuf.data = nullptr;
+    tmr_cmd = 0;
+    getrec = goCmd = false;
+    apiSnd = 0;
+    cmd = noneCmd;
 
     //-------------------------
 
@@ -149,10 +156,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->actionCONNECT,    &QAction::triggered, this, &MainWindow::on_connect);
     connect(ui->actionDISCONNECT, &QAction::triggered, this, &MainWindow::on_disconnect);
     connect(ui->actionCLEAR,      &QAction::triggered, this, &MainWindow::clrLog);
-    connect(ui->actionFile,       &QAction::triggered, this, &MainWindow::getFile);
     connect(ui->actionGetApi,     &QAction::triggered, this, &MainWindow::getApi);
     connect(ui->actionProgApi,    &QAction::triggered, this, &MainWindow::progApi);
     connect(ui->actionCompApi,    &QAction::triggered, this, &MainWindow::compApi);
+    connect(ui->actionCRC32,      &QAction::triggered, this, &MainWindow::crc32File);
+    ui->actionVERSION->setToolTip("About " + title);
+    ui->actionPORT->setToolTip("configure serial port");
+    ui->actionCLEAR->setToolTip("clear Log window");
+    ui->actionGetApi->setToolTip("get API");
+    ui->actionProgApi->setToolTip("prog API");
+    ui->actionCompApi->setToolTip("compare API");
+    ui->actionCRC32->setToolTip("calc CRC32");
 
     connect(this, &MainWindow::sigConn, this, &MainWindow::on_connect);
     connect(this, &MainWindow::sigDisc, this, &MainWindow::on_disconnect);
@@ -184,16 +198,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         //keyAdr[i]->setEnabled(false);
         connect(keyAdr[i], &QPushButton::clicked, this, &MainWindow::keyPrs);
     }
-    //connect(this, &MainWindow::snd_ind, this, &MainWindow::keyPrs);
     //
-    QByteArray stz; stz.clear();
     ui->stx->setText("#");
     ui->stx->setEnabled(false);
     ui->crlfBox->setCheckState(Qt::Checked);
     ui->crlfBox->setEnabled(false);
+    ui->log->setEnabled(false);
     //
     connect(this, &MainWindow::sigButtonData, this, &MainWindow::slotButtonData);
     connect(this, &MainWindow::sig_mkList, this, &MainWindow::slot_mkList);
+    connect(this, &MainWindow::sig_goProc, this, &MainWindow::slot_goProc);
+    connect(this, &MainWindow::sig_Ready, this, &MainWindow::slot_Ready);
+    connect(this, &MainWindow::sig_timeOutAck, this, &MainWindow::slot_timeOutAck);
 
 
 #ifdef SET_MOUSE_KEY
@@ -296,8 +312,12 @@ void MainWindow::getFile()
                 ui->status->setText("Error readinf file " + *nm);
             } else {
                 crcFile = crc32(0, pTmp, fileSize);
-                ui->status->clear();
-                ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16).toUpper());
+                //ui->status->clear();
+                //ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16).toUpper());
+                QMessageBox::information(this, "calc CRC32",
+                                         "File : " + *nm + cr_lf +
+                                         "Size: " + QString::number(fileSize, 10) + " bytes" + cr_lf +
+                                         "CRC32: 0x" + QString::number(crcFile, 16).toUpper() + cr_lf);
             }
         } else {
             ui->status->clear();
@@ -315,7 +335,7 @@ void MainWindow::getFile()
 //--------------------------------------------------------------------------------
 int MainWindow::initSerial()
 {
-    deinitSerial();
+    //deinitSerial();
 
     sdev = new QSerialPort(sdevName);
     if (sdev) {
@@ -332,13 +352,11 @@ int MainWindow::initSerial()
             sdev = nullptr;
             return 1;
         } else {
-            //
-            rxData.clear();            
-            while (!sdev->atEnd()) rxData.append(sdev->readAll());
             rxData.clear();
             txData.clear();
-
-            ui->log->append("\n");
+            while (!sdev->atEnd()) rxData = sdev->readAll();
+            rxData.clear();
+            txData.clear();
 
             connect(sdev, &QSerialPort::readyRead, this, &MainWindow::ReadData);
             connect(sdev, &QSerialPort::errorOccurred, this, &MainWindow::slotError);
@@ -359,6 +377,8 @@ void MainWindow::deinitSerial()
         sdev->disconnect();
         delete sdev;
         sdev = nullptr;
+        rxData.clear();
+        txData.clear();
     }
 }
 //--------------------------------------------------------------------------------
@@ -375,7 +395,25 @@ void MainWindow::About()
     box.exec();
 }
 //-----------------------------------------------------------------------
-void MainWindow::LogSave(const char *func, const QByteArray & st, bool pr)
+void MainWindow::LogSave(const char *func, QByteArray & st, bool pr)
+{
+    QString fw;
+    if (pr) {
+        time_t ict = QDateTime::currentDateTime().toTime_t();
+        struct tm *ct = localtime(&ict);
+        fw.sprintf("%02d.%02d.%02d %02d:%02d:%02d | ", ct->tm_mday, ct->tm_mon+1, ct->tm_year+1900, ct->tm_hour, ct->tm_min, ct->tm_sec);
+    }
+    if (func) {
+        fw.append("[");
+        fw.append(func);
+        fw.append("] ");
+    }
+    fw.append(st);
+
+    ui->log->append(fw);//to log screen
+}
+//-----------------------------------------------------------------------
+void MainWindow::LogSave(const char *func, const QString & st, bool pr)
 {
     QString fw;
     if (pr) {
@@ -417,7 +455,7 @@ void MainWindow::on_connect()
 
         ui->stx->setEnabled(true);
         ui->crlfBox->setEnabled(true);
-        rxData.clear();
+        ui->log->setEnabled(true);
 
     } else {
         ui->status->clear();
@@ -444,6 +482,7 @@ void MainWindow::on_disconnect()
 
     ui->stx->setEnabled(false);
     ui->crlfBox->setEnabled(false);
+    ui->log->setEnabled(false);
 
     //for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(false);
 
@@ -484,6 +523,7 @@ void MainWindow::keyPrs()
     }
     if (key != -1) {
         if (sdev) {
+            cmd = noneCmd;
             QByteArray m; m.append(keyArr[key]);
             emit sigWrite(m);
         } else {
@@ -521,7 +561,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
 { 
     if (tmr_sec == event->timerId()) {
         ms10++;
-        if (ms10 >= 99) {
+        if (!(ms10 % 100)) {
             Tik++;
             time_t it_ct = QDateTime::currentDateTime().toTime_t();
             struct tm *ctimka = localtime(&it_ct);
@@ -533,7 +573,14 @@ void MainWindow::timerEvent(QTimerEvent *event)
                     ctimka->tm_hour,
                     ctimka->tm_min,
                     ctimka->tm_sec);
-        setWindowTitle(title +" ver. " + vers + "  |  " + dt);
+            setWindowTitle(title +" ver. " + vers + "  |  " + dt);
+        }
+        if (wait_ack) {
+            if (check_tmr(wait_ack)) {
+                wait_ack = 0;
+                goCmd = false;
+                emit sig_timeOutAck();
+            }
         }
     }
 }
@@ -542,16 +589,45 @@ int MainWindow::chkDone(QByteArray *buf)
 {
 int ret = -1;
 
-    ret = buf->indexOf("\r\n>", 0);
-    if (ret != -1) {
-        return ret + 3;
-    } else {
-        ret = buf->indexOf("\r\n", 0);
+    if (!goCmd) {
+        ret = buf->indexOf("\r\n>", 0);
         if (ret != -1) {
-            return ret + 2;
+            return ret + 3;
         } else {
-            ret = buf->indexOf(">", 0);
-            if (ret != -1) return ++ret;
+            ret = buf->indexOf("\r\n", 0);
+            if (ret != -1) {
+               return ret + 2;
+            } else {
+                ret = buf->indexOf(">", 0);
+                if (ret != -1) return ++ret;
+            }
+        }
+    } else {
+        if (buf->length() == ackLen) {
+            ret = 0;
+        } else {
+            switch (cmd) {
+                case binCmd:
+                    if (buf->indexOf("BIN\r\n>", 0) != -1) {
+                        ret = 0;
+                        rec.err = rec.cnt = 0;
+                    }
+                break;
+                case stopCmd:
+                    if ( (buf->indexOf("ERROR!\r\n>", 0) != -1) ||
+                         (buf->indexOf("BAD STRING.\r\n>", 0) != -1) ||
+                            (buf->indexOf("\r\n>", 0) != -1) ) {
+                        ret = 0;
+                        rec.err = rec.cnt = 0;
+                    }
+                break;
+                case startCmd:
+                    if (buf->indexOf("m1\r\n", 0) != -1) {
+                        ret = 0;
+                        rec.err = rec.cnt = 0;
+                    }
+                break;
+            }
         }
     }
 
@@ -568,14 +644,23 @@ int ix = -1;
         if (ix != -1) break;
     }
     if (ix != -1) {
-        int pos = 0;
-        QByteArray dat, line = rxData.mid(0, ix);
-        if ((pos = line.indexOf("\r\n>", 0)) == -1) {
-            if ((pos = line.indexOf("\r\n", 0)) != -1) line.remove(pos, 2);
+        if (cmd >= stopCmd) {
+            int pos = 0;
+            QByteArray dat, line = rxData.mid(0, ix);
+            if ((pos = line.indexOf("\r\n>", 0)) == -1) {
+                if ((pos = line.indexOf("\r\n", 0)) != -1) line.remove(pos, 2);
+            }
+            LogSave(nullptr, line, false);
+            if (rxData.length() > (ix + 1)) rxData.remove(0, ix);
+                                       else rxData.clear();
+        //} else {
+            if (cmd != noneCmd) {
+                memcpy(ibuff, rxData.data(), rxData.length());
+                LogSave(nullptr, rxData, false);
+                rxData.clear();
+                emit sig_Ready();
+            }
         }
-        LogSave(nullptr, line, false);
-        if (rxData.length() > (ix + 1)) rxData.remove(0, ix);
-                                   else rxData.clear();
     }
 
 }
@@ -680,6 +765,41 @@ void MainWindow::closeEvent(QCloseEvent *evt)
 }
 */
 //**************************************************************************************
+//-----------------------------------------------------------------------
+//  Функции для установки временных интервалов , а также их проверки
+//
+uint32_t MainWindow::get10ms()
+{
+    return ms10;
+}
+//
+uint32_t MainWindow::get_tmr(uint32_t tm)
+{
+    return (get10ms() + tm);
+}
+//
+int MainWindow::check_tmr(uint32_t tm)
+{
+    return (get10ms() >= tm ? 1 : 0);
+}
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//  Функция записывает заданное количество байт в файл (в асинхронном режиме для win32)
+//
+int MainWindow::writes(const char *data, int len)
+{
+int ret = -1;
+
+    if (!sdev) return ret;
+
+    if (sdev->isOpen()) {
+        ret = (int)sdev->write(data, len);
+        QByteArray mas; mas.append(data, len);
+        //LogSave(nullptr, mas, false);
+    }
+
+    return ret;
+}
 //----------------------------------------------------------------------
 //   Функция возвращает контрольную сумму CRC8 массива байт
 //
@@ -706,22 +826,153 @@ void MainWindow::initList()
 void MainWindow::getApi()
 {
     initList();
-    mode = downCmd;
+    mode = stopCmd;//downCmd;
     emit sig_mkList(mode);
 }
 //--------------------------------------------------------------------------------
 void MainWindow::progApi()
 {
     initList();
-    mode = progCmd;
+    mode = binCmd;//progCmd;
     emit sig_mkList(mode);
 }
 //--------------------------------------------------------------------------------
 void MainWindow::compApi()
 {
     initList();
-    mode = compCmd;
+    mode = stopCmd;//compCmd;
     emit sig_mkList(mode);
+}
+//--------------------------------------------------------------------------------
+void MainWindow::crc32File()
+{
+    initList();
+    mode = startCmd;//crcCmd;
+    emit sig_mkList(mode);
+}
+//--------------------------------------------------------------------------------
+void MainWindow::qstr(const char *buf, uint16_t len, QString *out)
+{
+QString ms;
+char *uk = (char *)buf;
+uint16_t i = 0;
+
+    while (i < len) {
+        ms.sprintf(" %02X", *uk++);
+        out->append(ms);
+    }
+}
+//----------------------------------------------------------------------
+//   Функция формирует символьную строку для печати из данных
+//    сформированных функцией mkFrame()
+//
+void MainWindow::prnFrame(const uint8_t *buf, uint16_t len, QString *st, record_t *rc)
+{
+    if (!buf || !st) return;
+
+    cmd_hdr_t *frame = (cmd_hdr_t *)buf;
+    uint16_t sz = sizeof(cmd_hdr_t);
+
+    QString stx, ms;
+    QByteArray bt; bt.append(all_mode[rc->cmd]);
+    stx.sprintf("Frame(%u):'%s'\n\tper_rzv:0x%02X%02X\n\tsn:0x%04X\n"
+                "\thd:0x%02X\n\t\trw:%u inc:%u text:%u rst:%u addr_ext:%u ld:%u\n",
+                rc->cmd, bt.data(), frame->pre, frame->rzv, frame->sn,
+                *(buf + 4), frame->hd.rw, frame->hd.inc, frame->hd.text, frame->hd.rst, frame->hd.addr_ext, frame->hd.ld);
+    if (len > (sz + 1)) {
+        if (rc->cmd == putCmd) {
+            //ms.sprintf("\tdata(%u):...", len - sz - 1);
+            stx.append(tr("\tdata(%1):...").arg(len - sz - 1));
+        } else {
+            stx.append("\tdata:");
+            qstr((char *)(buf + sz), len - 1, &stx);
+        }
+        stx.append("\n");
+    }
+    ms.sprintf("\tcrc8:0x%02X\n", *(buf + len - 1));
+    *st = stx.append(ms);
+}
+//--------------------------------------------------------------------------------
+void MainWindow::slot_goProc(int8_t md)
+{
+    if ((total_cmd_list <= 0) || devErr) return;
+
+    if (getrec) {
+        rec = cmd_list.at(cmd_list_ind);
+        cmd_list_ind++;
+        if (total_cmd_list) total_cmd_list--;
+    }
+
+    QString chap;
+    cmd = rec.cmd;
+    patch = false;
+    goCmd = false;
+
+
+    if (rec.cmd >= readCmd) {
+        if (rec.repeat) {
+            rec.adr = apiAddr;
+            rec.len = apiLen;
+            if (pTmp) memcpy(to_dev_data, pTmp + apiSnd, ((apiLen + 1) << 2));
+        }
+        uint16_t frame_len = mkFrame(rec.cmd, rec.adr, rec.len, rec.data, (uint8_t *)buff, &ackLen);
+        if (frame_len) {
+            if ((cmd == textCmd) && (md != textCmd)) {
+                ackLen++;
+                patch = true;
+            }
+            if (ackLen != -1) {
+                prnFrame((uint8_t *)buff, frame_len, &chap, &rec);
+            } else {
+                ackLen = 64;
+                if (frame_len > 2)
+                    chap.sprintf("< (%u):%.*s\n", frame_len, frame_len - 2, buff);
+                else
+                    chap.sprintf("< (%u):%.*s\n", frame_len, frame_len, buff);
+            }
+            LogSave(nullptr, chap, false);
+            uint8_t wr_ok = 0;
+            if (writes(buff, frame_len) == frame_len) wr_ok = 1;
+            if (wr_ok) {
+                goCmd = true;
+                if (cmd < stopCmd) {
+                    chap.sprintf("< (%u-%u):", frame_len, ackLen);
+                    qstr(buff, frame_len, &chap);
+                    chap.append("\n");
+                    LogSave(nullptr, chap, false);
+                }
+                memset(buff, 0, sizeof(buff));
+                memset(ibuff, 0, sizeof(ibuff));
+                wait_ack = get_tmr(200);//2s
+                if (cmd == stopCmd) rec.err = 1;
+            } else {
+                chap = (tr("Error sending to device %1 bytes :%2\n").arg(frame_len).arg(strerror(errno)));
+                LogSave(nullptr, chap, false);
+            }
+        } else {
+            chap.sprintf("Error : (mkFrame() == %u) <= 0", frame_len);
+            ui->status->clear();
+            ui->status->setText(chap);
+        }
+    }
+
+}
+//--------------------------------------------------------------------------------
+void MainWindow::slot_timeOutAck()
+{
+    ui->status->clear();
+    ui->status->setText("Command '" + all_mode[mode] +"' : Wait answer timeout !");
+    cmd = noneCmd;
+    goCmd = false;
+}
+//--------------------------------------------------------------------------------
+void MainWindow::slot_Ready()
+{
+    wait_ack = 0;
+    cmd = noneCmd;
+    goCmd = false;
+    ui->status->clear();
+    ui->status->setText("Command '" + all_mode[mode] +"' : Answer from device Ready !");
 }
 //--------------------------------------------------------------------------------
 void MainWindow::slot_mkList(int8_t md)
@@ -745,6 +996,15 @@ void MainWindow::slot_mkList(int8_t md)
     mkList(md);
     ui->status->clear();
     ui->status->setText("Make list with #" + QString::number(all_cmd_in_list, 10) + " commands for mode '" + all_mode[md] +"' done");
+
+    if (md == crcCmd) getFile();
+    else {
+        tmr_cmd = get_tmr(1);//10ms
+        memset((uint8_t *)&rec, 0, sizeof(record_t));
+        apiSnd = 0;
+        getrec = true;
+        emit sig_goProc(md);
+    }
 
 }
 //--------------------------------------------------------------------------------
@@ -975,7 +1235,7 @@ record_t rec;
             rec.cmd = putCmd;//PUT - write to flash
             rec.adr = API_HDR_ADDR_DEF + TEST_SHIFT_ADDR;
             rec.len = (sizeof(apiHdrData_t) >> 2) - 1;//len must bee set in dword - 1
-            rec.data = &to_dev_data;
+            rec.data = to_dev_data;
             addToList(&rec, 0);
 
 //!!!!!!!!!!!!!!!!!!  Собственно запись api  !!!!!!!!!!!!!!!!!!!!!!!!!
@@ -984,7 +1244,7 @@ record_t rec;
             rec.repeat = 1;
             rec.adr = apiAddr;//API_ADDR_DEF;
             rec.len = apiLen;//255;
-            rec.data = &to_dev_data;
+            rec.data = to_dev_data;
             addToList(&rec, 0);
 
 //-----------   Чтение записанного заголовка api из флэш   ----------------
@@ -1022,7 +1282,7 @@ record_t rec;
             rec.cmd = writeCmd;
             rec.adr = (uint8_t)regAddr;
             rec.len = 0;//regLen;
-            rec.data = &to_dev_data;
+            rec.data = to_dev_data;
             addToList(&rec, 1);
         break;
         case rstCmd://RD_REG:// = 0,
@@ -1059,7 +1319,7 @@ record_t rec;
             rec.cmd = putCmd;//write flash memory by adr
             rec.adr = regAddr;// >= API_HDR_ADDR_DEF
             rec.len = regLen;//0..0xff
-            rec.data = &to_dev_data;
+            rec.data = to_dev_data;
             addToList(&rec, 1);
         break;
 
