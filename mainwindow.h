@@ -65,6 +65,8 @@
 #define DEV_TYPE_ADDR    0x52
 
 #define API_VERSION_DEF  0x34
+#define API_VERSION_OFFSET 0x12e90 //по этому смещению от начала в файле должна находиться строка "api_version:3.6" (3-мажор, 6-минор)
+#define API_VERSION_STRING "api_version:"
 
 #ifdef PROG_TEST_MODE
     #define TEST_SHIFT_ADDR 0x40000
@@ -243,6 +245,7 @@ public slots:
     void setTrayIconActions();
     void showTrayIcon();
     */
+    bool getApiVer(const uint8_t *buf);
     void qstr(const char *buf, uint16_t len, QString *out);
     int writes(const char *data, int len);
     uint32_t get10ms();
@@ -379,6 +382,7 @@ private:
     uint32_t apiAddr;
     uint32_t apiLen;
     uint32_t apiSnd;
+    uint32_t api_version = API_VERSION_DEF;
     apiBuf_t apiBuf;
     uint8_t devErr, cmd;
     uint32_t tmr_cmd, wait_ack;

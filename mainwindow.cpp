@@ -31,7 +31,8 @@
 //const QString vers = "1.3";//07.08.2020
 //const QString vers = "1.4";//09.08.2020  !!! +++ !!!
 //const QString vers = "1.5";//10.08.2020
-const QString vers = "1.6";//13.08.2020
+//const QString vers = "1.6";//13.08.2020
+const QString vers = "1.7";//14.08.2020
 
 
 
@@ -41,8 +42,8 @@ const QString main_pic    = "png/main.png";
 const QString con_pic     = "png/conn.png";
 const QString dis_pic     = "png/dis.png";
 const QString salara_pic  = "png/salara.png";
-const QString hide_pic    = "png/eyeHide.png";
-const QString show_pic    = "png/eyeShow.png";
+//const QString hide_pic    = "png/eyeHide.png";
+//const QString show_pic    = "png/eyeShow.png";
 const QString close_pic   = "png/close.png";
 
 const QByteArray cr_lf = "\r\n";
@@ -166,7 +167,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->actionGetApi->setToolTip("get API");
     ui->actionProgApi->setToolTip("prog API");
     ui->actionCompApi->setToolTip("compare API");
-    ui->actionCRC32->setToolTip("calc CRC32");
+    ui->actionCRC32->setToolTip("calc CRC32");    
+    /*ui->actionGetApi->setEnabled(false);
+    ui->actionProgApi->setEnabled(false);
+    ui->actionCompApi->setEnabled(false);
+    ui->actionCRC32->setEnabled(false);*/
 
     connect(this, &MainWindow::sigConn, this, &MainWindow::on_connect);
     connect(this, &MainWindow::sigDisc, this, &MainWindow::on_disconnect);
@@ -287,6 +292,31 @@ const uint8_t *p = buf;
 
 }
 //--------------------------------------------------------------------------------
+bool MainWindow::getApiVer(const uint8_t *buf)
+{
+bool ret = false;//API_VERSION_DEF;
+
+    if (!buf) return ret;
+
+    char num[4] = {0};
+    char *uki = NULL;
+    char *uk = (char *)(buf + API_VERSION_OFFSET);// 0x12e90 //строка "api_version:3.6" (3-мажор, 6-минор)
+
+    uki = strstr(uk, API_VERSION_STRING);
+    if (uki) {
+        uki += strlen(API_VERSION_STRING);
+        strncpy(num, uki, 3);
+        if (num[1] == '.') {
+            uint32_t ver = (num[0] - 0x30) << 4;
+            ver |= (num[2] - 0x30);
+            api_version = ver;
+            ret = true;
+        }
+    }
+
+    return ret;
+}
+//--------------------------------------------------------------------------------
 void MainWindow::getFile()
 {
     QString *nm = new QString();
@@ -312,12 +342,15 @@ void MainWindow::getFile()
                 ui->status->setText("Error readinf file " + *nm);
             } else {
                 crcFile = crc32(0, pTmp, fileSize);
+                bool rt = getApiVer(pTmp);
                 //ui->status->clear();
                 //ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16).toUpper());
-                QMessageBox::information(this, "calc CRC32",
-                                         "File : " + *nm + cr_lf +
-                                         "Size: " + QString::number(fileSize, 10) + " bytes" + cr_lf +
-                                         "CRC32: 0x" + QString::number(crcFile, 16).toUpper() + cr_lf);
+                QString stx = "File : " + *nm + cr_lf +
+                        "Size: " + QString::number(fileSize, 10) + " bytes" + cr_lf +
+                        "ApiVersion: " + QString::number(api_version >> 4, 10) + "." + QString::number(api_version & 0x0f, 10);
+                if (!rt) stx.append(" ?");
+                stx.append(cr_lf + "CRC32: 0x" + QString::number(crcFile, 16).toUpper() + cr_lf);
+                QMessageBox::information(this, "calc CRC32", stx);
             }
         } else {
             ui->status->clear();
@@ -451,6 +484,11 @@ void MainWindow::on_connect()
         ui->actionPORT->setEnabled(false);
         ui->actionDISCONNECT->setEnabled(true);
 
+        /*ui->actionGetApi->setEnabled(true);
+        ui->actionProgApi->setEnabled(true);
+        ui->actionCompApi->setEnabled(true);
+        ui->actionCRC32->setEnabled(true);*/
+
         //for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(true);
 
         ui->stx->setEnabled(true);
@@ -483,6 +521,11 @@ void MainWindow::on_disconnect()
     ui->stx->setEnabled(false);
     ui->crlfBox->setEnabled(false);
     ui->log->setEnabled(false);
+
+    /*ui->actionGetApi->setEnabled(false);
+    ui->actionProgApi->setEnabled(false);
+    ui->actionCompApi->setEnabled(false);
+    ui->actionCRC32->setEnabled(false);*/
 
     //for (int i = 0; i < keyCnt; i++) keyAdr[i]->setEnabled(false);
 
@@ -825,6 +868,8 @@ void MainWindow::initList()
 //--------------------------------------------------------------------------------
 void MainWindow::getApi()
 {
+    if (!sdev) return;
+
     initList();
     mode = stopCmd;//downCmd;
     emit sig_mkList(mode);
@@ -832,22 +877,28 @@ void MainWindow::getApi()
 //--------------------------------------------------------------------------------
 void MainWindow::progApi()
 {
+    if (!sdev) return;
+
     initList();
-    mode = binCmd;//progCmd;
+    mode = startCmd;//progCmd;
     emit sig_mkList(mode);
 }
 //--------------------------------------------------------------------------------
 void MainWindow::compApi()
 {
+    if (!sdev) return;
+
     initList();
-    mode = stopCmd;//compCmd;
+    mode = binCmd;//compCmd;
     emit sig_mkList(mode);
 }
 //--------------------------------------------------------------------------------
 void MainWindow::crc32File()
 {
+    //if (!sdev) return;
+
     initList();
-    mode = startCmd;//crcCmd;
+    mode = crcCmd;
     emit sig_mkList(mode);
 }
 //--------------------------------------------------------------------------------
