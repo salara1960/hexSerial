@@ -54,7 +54,7 @@
 #define TO_DEV_SIZE      1024
 
 #define MAX_MODE         14
-#define MAX_ERR_STR      13
+#define MAX_ERR_STR      14
 #define MAX_ALL_DEV_TYPE 3
 #define MAX_TRY          3
 
@@ -155,6 +155,22 @@ typedef struct {
 
 #pragma pack(push,1)
 typedef struct {
+    uint8_t res:3;//0-OK, 1-ошибка выполнения операции, 2-ошибка сброса FLASH, 3-ошибка записи FLASH, 2..7-резерв
+    uint8_t none:5;
+} byte_res_t;
+#pragma pack(pop)
+#pragma pack(push,1)
+typedef struct {
+    uint8_t rzv;
+    uint16_t sn;//старший байт, затем младший //SN[1],SN[0] : SN[1] - старший. SN[0] - младший - ФОРМАТ NETWORK
+    byte_res_t err;//байт результата операции :
+//    uint32_t data;//ФОРМАТ NETWORK
+//    uint8_t crc;
+} ack_hdr_t;
+#pragma pack(pop)
+
+#pragma pack(push,1)
+typedef struct {
     uint8_t cmd;
     uint8_t err;
     uint8_t cnt;
@@ -187,7 +203,7 @@ typedef struct {
 
 #pragma pack(push,1)
 typedef struct {
-    QByteArray *data;
+    uint8_t *data;
     uint32_t len;
     uint32_t size;
 } apiBuf_t;
@@ -257,6 +273,9 @@ public slots:
     int check_tmr(uint32_t);
     void initList();
     uint8_t crc8(const uint8_t *uk, uint16_t bytes);
+    const char *errStr(uint8_t err);
+    bool check_apiPresent(apiHdrData_t *hdr);
+    void parseAck(void *in, int len, char *st, record_t *rc);
     uint16_t mkFrame(uint8_t cmd, uint32_t addr, uint8_t len, uint8_t *in, uint8_t *out, int *ack_len);
     void addToList(record_t *rc, uint8_t fin);
     int8_t mkList(uint8_t cmd);
@@ -319,6 +338,22 @@ private:
     QPushButton *keyAdr[keyCnt];
     const QString keyName[keyCnt] = {"Stop", "Start", "Dirs", "Bin", "Text", "Info", "Deep", "CRC32", "Key"};
     const QString keyData[keyCnt] = {"#", "m1\r\n", "$dirs\r\n", "#082;bin\r\n", "#082;sc33\r\n", "#149\r\n", "#140\r\n", "#147\r\n", "s\r\n"};
+    const char *all_err_str[MAX_ERR_STR] = {
+        "Ok",
+        "Operation error",     // "Ошибка выполнения операции",
+        "FLASH reset error",   // "Ошибка сброса FLASH",
+        "FLASH write error",   // "Ошибка записи FLASH",
+        "No answer",           // "Ошибка ожидания ответа",
+        "Command rejected",    // "Команда отклонена",
+        "Abort from keyboard", // "Процедура прервана с клавиатуры",
+        "Fatal error",         // "Неисправимая ошибка",
+        "Error fileLen",       // "Не валидный размер файла"
+        "Error fileOpen",      // "Ошибка при открытии файла"
+        "Error getMem",        // "Ошибка выделения памяти"
+        "Error fileRead",      // "Ошибка при чтении из файла"
+        "Error fileWrite",     // "Ошибка при записи в файл",
+        "Unknown error"        // "Неизвестная ошибка"
+    };
     //settings
     SettingsDialog *conf = nullptr;
     uint32_t Tik, ms10;
@@ -376,6 +411,8 @@ private:
         {0x65, 1, "i2cErrorCounter"}
     };
 
+    apiHdrData_t apiHdrData;
+    apiHdrData_t src_apiHdrData;
     QList <record_t> cmd_list;
     int8_t cmd_list_ind = 0;
     int8_t total_cmd_list = 0;
@@ -387,37 +424,28 @@ private:
     uint32_t apiAddr;
     uint32_t apiLen;
     uint32_t apiSnd;
+    uint32_t apiBlk = 0;
     uint32_t api_version = API_VERSION_DEF;
     apiBuf_t apiBuf;
     uint8_t devErr, cmd;
     uint32_t tmr_cmd, wait_ack;
     record_t rec;
-    bool getrec, patch, goCmd;
-    int ackLen;
+    bool getrec, patch, goCmd, cmdStop = false, progDone = false;
+    bool apiPresent = false;
+    int ackLen, ibuff_len = 0;
     char buff[BUF_SIZE + 8] = {0};
     char ibuff[BUF_SIZE + 8] = {0};
     uint8_t to_dev_data[TO_DEV_SIZE];
+    char apiFileName[128] = {0};
+    uint8_t dev_type = MAX_ALL_DEV_TYPE - 1;
+    psw0_t psw0;
     QString chap;
     const QByteArray to_stop = "#\r\n";
     const QByteArray to_start = "m1\r\n";
     const QByteArray to_bin = "#082;bin\r\n";
     const QString all_mode[MAX_MODE] = {"crc", "read", "write", "get", "put", "boot", "rst", "text", "download", "compare", "prog", "stop", "start", "bin"};
-    const QString all_dev_type[MAX_ALL_DEV_TYPE] = {"svm", "svp", "noname"};
-    const QString all_err_str[MAX_ERR_STR] = {
-        "Ok",
-        "Operation error", // "Ошибка выполнения операции",
-        "FLASH reset error", // "Ошибка сброса FLASH",
-        "FLASH write error", // "Ошибка записи FLASH",
-        "No answer", // "Ошибка ожидания ответа",
-        "Command rejected", // "Команда отклонена",
-        "Abort from keyboard", // "Процедура прервана с клавиатуры",
-        "Fatal error", // "Неисправимая ошибка",
-        "Error fileLen",
-        "Error fileOpen",
-        "Error getMem",
-        "Error fileRead",
-        "Unknown error"//Неизвестная ошибка"
-    };
+    const char *all_dev_type[MAX_ALL_DEV_TYPE] = {"svm", "svp", "noname"};
+
 
     //tray
     /*

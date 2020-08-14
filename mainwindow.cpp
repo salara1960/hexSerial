@@ -140,6 +140,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     getrec = goCmd = false;
     apiSnd = 0;
     cmd = noneCmd;
+    memset(&psw0, 0, sizeof(psw0_t));
 
     //-------------------------
 
@@ -700,6 +701,7 @@ int ix = -1;
         //} else {
             if (cmd != noneCmd) {
                 memcpy(ibuff, rxData.data(), rxData.length());
+                ibuff_len = rxData.length();
                 LogSave(nullptr, rxData, false);
                 rxData.clear();
                 emit sig_Ready();
@@ -1031,6 +1033,16 @@ void MainWindow::slot_Ready()
     goCmd = false;
     ui->status->clear();
     ui->status->setText("Command '" + all_mode[mode] +"' : Answer from device Ready !");
+    if (cmd < stopCmd) {
+        char *st = (char *)calloc(1, 8192);
+        parseAck((void *)ibuff, ibuff_len, st, &rec);
+        if (st) {
+            chap.clear();
+            chap.append(st);
+            LogSave(nullptr, chap, false);
+            free(st);
+        }
+    }
 }
 //--------------------------------------------------------------------------------
 void MainWindow::slot_mkList(int8_t md)
@@ -1040,7 +1052,7 @@ void MainWindow::slot_mkList(int8_t md)
         case compCmd:
         case downCmd:
             apiBuf.size = 1;
-            apiBuf.data = new QByteArray();
+            apiBuf.data = (uint8_t *)calloc(1, apiBuf.len);//new QByteArray();
             apiBuf.len = 0;
             if (apiBuf.data == nullptr) {
                 devErr = errGetMem;
@@ -1063,6 +1075,202 @@ void MainWindow::slot_mkList(int8_t md)
         getrec = true;
         emit sig_goProc(md);
     }
+
+}
+//----------------------------------------------------------------------
+//   Функция возвращает строковое значение ошибки при обмене с датчиком
+//
+const char *MainWindow::errStr(uint8_t err)
+{
+    if (err > MAX_ERR_STR) err = MAX_ERR_STR - 1;
+
+    return all_err_str[err];
+}
+//----------------------------------------------------------------------
+//   Функция проверяет на валидность заголовок API (прочитанный из FLASH)
+//   и в случае положительного результата возвращает true, иначе false
+//
+bool MainWindow::check_apiPresent(apiHdrData_t *hdr)
+{
+bool ret = false;
+
+    if ( (hdr->Mag1 == MAGIC1) &&
+            (hdr->Mag2 == MAGIC2) &&
+                (hdr->apiAddr == API_ADDR_DEF + TEST_SHIFT_ADDR) &&
+                    ((hdr->apiLen >= 0x19000) && (hdr->apiLen < 0x80000)) && // 100k..512k
+                        ((hdr->apiCrc != 0) && (hdr->apiCrc != 0xffffffff)) ) {
+        ret = true;
+    }
+
+    return ret;
+}
+//----------------------------------------------------------------------
+//  Функция выполняет анализ ответа на команду, формируя
+//  символьную строку для вывода на печать, а также осуществляет
+//  прием некоторой служебной информации об устройстве :
+//  тип устройства, версия прошивки, CRC32 прошивки, .......
+//
+void MainWindow::parseAck(void *in, int len, char *st, record_t *rc)
+{
+    if (!len || !in) return;
+
+    uint8_t *uk = (uint8_t *)in;
+
+    if (patch) uk++;// убрать паразитный байт после команды "рестарт"
+
+    ack_hdr_t *ack = (ack_hdr_t *)uk;
+    uint8_t crc = *(uint8_t *)(uk + len - 1);
+    int tp = 0;
+    uint8_t cd = rc->cmd;
+
+
+    //if (dbg == onLog)
+    //    tp = sprintf(st, "Ack_hdr: sn:%u err:%02X '%s'", ack->sn, ack->err.res, errStr(ack->err.res));
+    //else if (dbg > onLog)
+        tp = sprintf(st, "Ack_hdr:\n\tsn:%u\n\terr:%02X '%s'\n", ack->sn, ack->err.res, errStr(ack->err.res));
+    //
+    //serNum = ack->sn;
+    devErr = ack->err.res;
+    //
+    uint8_t *data = (uint8_t *)(uk + sizeof(ack_hdr_t));
+    uint32_t dl = 0;
+    uint32_t data_len = len - sizeof(ack_hdr_t) - 1;
+    uint32_t dw = 0, sz = sizeof(uint32_t);
+    uint32_t adr = rc->adr;//regAddr;
+
+
+    if (!devErr) {
+
+        //if (toFile) saveRegs(saveFileName, data, data_len);
+
+        if (data_len >= sizeof(uint32_t)) {
+        if (!devErr) {
+            if (cd == getCmd) {
+                    if ( (rc->adr == API_HDR_ADDR_DEF + TEST_SHIFT_ADDR) && (data_len >= sizeof(apiHdrData_t)) ) {
+                        memcpy((uint8_t *)&apiHdrData, data, sizeof(apiHdrData_t));
+                        apiPresent = check_apiPresent(&apiHdrData);
+                        if (apiPresent) {
+                            if (apiBuf.data) {
+                                sprintf(apiFileName, "api_%s-v%u_%u-%08X.bin",
+                                            all_dev_type[dev_type],
+                                            psw0.swVersion >> 4, psw0.swVersion & 0xf,
+                                            apiHdrData.apiCrc);
+                            }
+                        }
+                    } else if (rc->adr >= API_ADDR_DEF + TEST_SHIFT_ADDR) {
+                        if (apiBuf.data) {
+                            if (apiBuf.size < apiHdrData.apiLen) {
+                                apiBuf.data = (uint8_t *)realloc(apiBuf.data, apiHdrData.apiLen - apiBuf.len);
+                                if (apiBuf.data) apiBuf.size = apiHdrData.apiLen;
+                                else {
+                                    cmdStop = true;
+                                    devErr = errGetMem;
+                                }
+                            }
+                            if (apiBuf.data) {
+                                memcpy(apiBuf.data + apiBuf.len, data, data_len);
+                                apiBuf.len += data_len;
+                                apiAddr    += data_len;
+                                if (apiBuf.len >= apiHdrData.apiLen) {
+                                    cmdStop = true;
+                                } else {
+                                    cmdStop = false;
+                                    uint32_t tail = (apiHdrData.apiLen - apiBuf.len) >> 2;
+                                    if (tail < 256) apiLen = tail - 1; else apiLen = 255;
+                                }
+                                dl = data_len;
+                            }
+                        }
+                    }
+                }
+            }
+            while (dl < data_len) {
+                memcpy((uint8_t *)&dw, data, sizeof(uint32_t));
+                if (cd == readCmd) {
+                    if (!devErr) {
+                        if (!adr) {
+                            if (!psw0.swVersion) {
+                                memcpy((uint8_t *)&psw0, (uint8_t *)&dw, sizeof(uint32_t));
+                                //if (mode == progCmd) waitEnter = true;
+                            }
+                        } else if (adr == DEV_TYPE_ADDR) {
+                            dev_type = dw;
+                            if (dev_type > MAX_ALL_DEV_TYPE - 1) dev_type = MAX_ALL_DEV_TYPE - 1;
+                        }
+                    }
+                }
+                //if (dbg > onLog) {
+                    if (cd < getCmd) {
+                        tp = snprintf(st+strlen(st), sizeof(st) - tp - 20, "\t\t0x%02X: 0x%08X/%u\n", adr++, dw, dw);
+                    } else {
+                        tp = snprintf(st+strlen(st), sizeof(st) - tp - 16, "\t\t0x%X: 0x%08X\n", adr, dw);
+                        adr += 4;
+                    }
+                //}
+                data += sz;
+                dl += sz;
+            }
+        }
+
+    }
+
+    //if (dbg > onLog)
+        tp = snprintf(st+strlen(st), sizeof(st) - tp - 16, "\tcrc:0x%02X", crc);
+
+    if (!devErr) {
+        if (!rc->adr) {
+            if (cd == readCmd) {
+                if (psw0.swVersion) {
+                    //if (dbg >= onLog) {
+                        tp = snprintf(st+strlen(st), sizeof(st) - tp - 8,
+                                    "\n\tpsw0:pk:0x%02X sw:0x%02X sn:0x%04X/%u dev:%s",
+                                                psw0.pkVersion,
+                                                psw0.swVersion,
+                                                psw0.serNumber,
+                                                psw0.serNumber,
+                                                all_dev_type[dev_type]);
+                    //}
+                }
+            }
+        } else if (rc->adr == API_HDR_ADDR_DEF + TEST_SHIFT_ADDR) {
+            if (cd == getCmd) {
+                if (apiPresent) {
+                    //if (dbg >= onLog) {
+                        tp = snprintf(st+strlen(st), sizeof(st) - tp - 64,
+                                                "\n\tapiHDR: vpk:%u.%u magic:0x%08X.0x%08X "
+                                                 "apiAddr:0x%08X apiLen:%u apiCrc:0x%08X",
+                                                (apiHdrData.vpk >> 8) & 0xff, apiHdrData.vpk & 0xff,
+                                                apiHdrData.Mag1, apiHdrData.Mag2,
+                                                apiHdrData.apiAddr, apiHdrData.apiLen, apiHdrData.apiCrc);
+                        if ((apiHdrData.apiVer & 0x0ff) != 0xff)
+                                    tp = snprintf(st+strlen(st), sizeof(st) - tp - 16, " apiVer:%u.%u",
+                                                (apiHdrData.apiVer >> 4) & 0x0f,  apiHdrData.apiVer & 0x0f);
+                    //}
+                }
+            }
+        }
+//--------------------------
+        if ((cd == putCmd) && (mode == progCmd)) {
+            if (rc->adr >= API_ADDR_DEF + TEST_SHIFT_ADDR) {
+                if (pTmp) {
+                    uint32_t slen = (apiLen + 1) << 2;
+                    apiSnd += slen;
+                    apiBlk++;
+                    if (apiSnd < fileSize) {
+                        apiAddr += slen;
+                        uint32_t tail = (fileSize - apiSnd) >> 2;
+                        if (tail < 255) apiLen = tail - 1; else apiLen = 255;
+                        cmdStop = false;
+                    } else {
+                        cmdStop  = true;//флаг - перейти к следующей элементароной команду в списке
+                        progDone = true;//флаг - "весь файл записан во флэш-память"
+                    }
+                } else cmdStop = true;
+            }
+        }
+//--------------------------
+    }
+    snprintf(st+strlen(st), sizeof(st) - tp - 2, "\n");
 
 }
 //--------------------------------------------------------------------------------
