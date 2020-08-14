@@ -216,6 +216,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(this, &MainWindow::sig_Ready, this, &MainWindow::slot_Ready);
     connect(this, &MainWindow::sig_timeOutAck, this, &MainWindow::slot_timeOutAck);
 
+    connect(this, &MainWindow::sig_answer_clicked, this, &MainWindow::on_answer_clicked);
 
 #ifdef SET_MOUSE_KEY
     connect(this, &MainWindow::sigRM, this, &MainWindow::slotRM);
@@ -738,7 +739,13 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     }
 }
 #endif
-
+//-------------------------------------------------------------------------------------
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Return) {
+        emit sig_answer_clicked();
+    }
+}
 //**************************************************************************************
 //                            Tray
 //**************************************************************************************

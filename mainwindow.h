@@ -35,8 +35,10 @@
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
 #include <QMouseEvent>
+#include <QKeyEvent>
 #include <QFileDialog>
 #include <QIODevice>
+
 
 
 //********************************************************************************
@@ -221,9 +223,11 @@ public:
 #ifdef SET_MOUSE_KEY
 protected:
     virtual void mousePressEvent(QMouseEvent *);
+    virtual void keyPressEvent(QKeyEvent *);
 #endif
 
 public slots:
+
     void slotButtonData();
     void KeyProg(QString);
     int initSerial();
@@ -266,9 +270,9 @@ public slots:
 private slots:
     void ReadData();
     void slotError(QSerialPort::SerialPortError);
-    void on_answer_clicked();
-    void keyPrs();
 
+    void keyPrs();
+    void on_answer_clicked();
     void on_connect();
     void on_disconnect();
     void getFile();
@@ -292,6 +296,7 @@ signals:
     void sig_goProc(int8_t);
     void sig_Ready();
     void sig_timeOutAck();
+    void sig_answer_clicked();
 
     void sig_mkList(int8_t);
 
