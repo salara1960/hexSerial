@@ -68,6 +68,7 @@
 
 #define API_VERSION_DEF  0x34
 #define API_VERSION_OFFSET 0x12e90 //по этому смещению от начала в файле должна находиться строка "api_version:3.6" (3-мажор, 6-минор)
+#define API_VERSION_OFFSET2 0x12ff0
 #define API_VERSION_STRING "api_version:"
 
 #ifdef PROG_TEST_MODE
@@ -256,16 +257,7 @@ public slots:
     void hexTobin(const char *, QByteArray *);
     void clrLog();
     //
-    //tray
-    /*
-    void changeEvent(QEvent*);
-    void closeEvent(QCloseEvent *);
-    void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-    void trayActionExecute();
-    void setTrayIconActions();
-    void showTrayIcon();
-    */
-    bool getApiVer(const uint8_t *buf);
+    int8_t getApiVer(const uint8_t *buf);
     void qstr(const char *buf, uint16_t len, QString *out);
     int writes(const char *data, int len);
     uint32_t get10ms();
@@ -318,7 +310,6 @@ signals:
     void sig_answer_clicked();
 
     void sig_mkList(int8_t);
-
 
 #ifdef SET_MOUSE_KEY
     void sigRM(int, int);
@@ -437,6 +428,7 @@ private:
     char ibuff[BUF_SIZE + 8] = {0};
     uint8_t to_dev_data[TO_DEV_SIZE];
     char apiFileName[128] = {0};
+    QByteArray fileName;
     uint8_t dev_type = MAX_ALL_DEV_TYPE - 1;
     psw0_t psw0;
     QString chap;
@@ -446,15 +438,6 @@ private:
     const QString all_mode[MAX_MODE] = {"crc", "read", "write", "get", "put", "boot", "rst", "text", "download", "compare", "prog", "stop", "start", "bin"};
     const char *all_dev_type[MAX_ALL_DEV_TYPE] = {"svm", "svp", "noname"};
 
-
-    //tray
-    /*
-    QMenu *trayIconMenu;
-    QAction *minA;
-    QAction *maxA;
-    QAction *quitA;
-    QSystemTrayIcon *trayIcon;
-    */
 };
 
 #endif // MAINWINDOW_H

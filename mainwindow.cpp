@@ -32,7 +32,8 @@
 //const QString vers = "1.4";//09.08.2020  !!! +++ !!!
 //const QString vers = "1.5";//10.08.2020
 //const QString vers = "1.6";//13.08.2020
-const QString vers = "1.7";//14.08.2020
+//const QString vers = "1.7";//14.08.2020
+const QString vers = "1.8";//18.08.2020
 
 
 
@@ -133,6 +134,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     //-----   for cmds  -------
 
+    fileName.clear();
     cmd_list.clear();
     chap.clear();
     apiBuf.data = nullptr;
@@ -157,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->actionPORT,       &QAction::triggered, conf, &SettingsDialog::show);
     connect(ui->actionCONNECT,    &QAction::triggered, this, &MainWindow::on_connect);
     connect(ui->actionDISCONNECT, &QAction::triggered, this, &MainWindow::on_disconnect);
-    connect(ui->actionCLEAR,      &QAction::triggered, this, &MainWindow::clrLog);
+    connect(ui->actionCLEAR,      &QAction::triggered, this, &MainWindow::clrLog);    
     connect(ui->actionGetApi,     &QAction::triggered, this, &MainWindow::getApi);
     connect(ui->actionProgApi,    &QAction::triggered, this, &MainWindow::progApi);
     connect(ui->actionCompApi,    &QAction::triggered, this, &MainWindow::compApi);
@@ -168,11 +170,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->actionGetApi->setToolTip("get API");
     ui->actionProgApi->setToolTip("prog API");
     ui->actionCompApi->setToolTip("compare API");
-    ui->actionCRC32->setToolTip("calc CRC32");    
-    /*ui->actionGetApi->setEnabled(false);
+    ui->actionCRC32->setToolTip("calc CRC32");
+    ui->actionGetApi->setEnabled(false);
     ui->actionProgApi->setEnabled(false);
     ui->actionCompApi->setEnabled(false);
-    ui->actionCRC32->setEnabled(false);*/
+    //ui->actionCRC32->setEnabled(false);
 
     connect(this, &MainWindow::sigConn, this, &MainWindow::on_connect);
     connect(this, &MainWindow::sigDisc, this, &MainWindow::on_disconnect);
@@ -180,6 +182,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->actionCONNECT->setEnabled(true);
     ui->actionPORT->setEnabled(true);
     ui->actionDISCONNECT->setEnabled(false);
+    ui->actionCLEAR->setEnabled(false);
 
     ui->status->clear();
 
@@ -294,9 +297,9 @@ const uint8_t *p = buf;
 
 }
 //--------------------------------------------------------------------------------
-bool MainWindow::getApiVer(const uint8_t *buf)
+int8_t MainWindow::getApiVer(const uint8_t *buf)
 {
-bool ret = false;//API_VERSION_DEF;
+int8_t ret = 0;
 
     if (!buf) return ret;
 
@@ -305,15 +308,25 @@ bool ret = false;//API_VERSION_DEF;
     char *uk = (char *)(buf + API_VERSION_OFFSET);// 0x12e90 //строка "api_version:3.6" (3-мажор, 6-минор)
 
     uki = strstr(uk, API_VERSION_STRING);
+    int add = strlen(API_VERSION_STRING);
+    if (!uki) {
+        uk = (char *)(buf + API_VERSION_OFFSET2);
+        uki = strstr(uk, API_VERSION_STRING);
+        if (!uki) {
+            add = 4;
+            uki = strstr(fileName.data(), "api-");
+            if (!uki) { uki = strstr(fileName.data(), "-v"); add = 2; ret = 2; }
+            else ret = 2;
+        } else ret = 1;
+    } else ret = 1;
     if (uki) {
-        uki += strlen(API_VERSION_STRING);
+        uki += add;
         strncpy(num, uki, 3);
-        if (num[1] == '.') {
+        if ((num[1] == '.') || (num[1] == '_')) {
             uint32_t ver = (num[0] - 0x30) << 4;
             ver |= (num[2] - 0x30);
             api_version = ver;
-            ret = true;
-        }
+        } else ret = 0;
     }
 
     return ret;
@@ -343,10 +356,16 @@ void MainWindow::getFile()
                 ui->status->clear();
                 ui->status->setText("Error readinf file " + *nm);
             } else {
+                fileName.clear();
+                fileName.append(*nm);
                 crcFile = crc32(0, pTmp, fileSize);
-                bool rt = getApiVer(pTmp);
-                //ui->status->clear();
-                //ui->status->setText("File " + *nm + " Size:" + QString::number(fileSize, 10) + ", CRC:0x" + QString::number(crcFile, 16).toUpper());
+                int8_t rt = getApiVer(pTmp);
+                ui->status->clear();
+                switch (rt) {
+                    case 1: ui->status->setText("Version API founded in body of the file"); break;
+                    case 2: ui->status->setText("Version API founded in name of the file"); break;
+                        default : ui->status->setText("Error: No found version API");
+                }
                 QString stx = "File : " + *nm + cr_lf +
                         "Size: " + QString::number(fileSize, 10) + " bytes" + cr_lf +
                         "ApiVersion: " + QString::number(api_version >> 4, 10) + "." + QString::number(api_version & 0x0f, 10);
@@ -485,6 +504,7 @@ void MainWindow::on_connect()
         ui->actionCONNECT->setEnabled(false);
         ui->actionPORT->setEnabled(false);
         ui->actionDISCONNECT->setEnabled(true);
+        ui->actionCLEAR->setEnabled(true);
 
         /*ui->actionGetApi->setEnabled(true);
         ui->actionProgApi->setEnabled(true);
@@ -519,6 +539,7 @@ void MainWindow::on_disconnect()
     con = false;
     ui->actionCONNECT->setEnabled(true);
     ui->actionDISCONNECT->setEnabled(false);
+    ui->actionCLEAR->setEnabled(false);
 
     ui->stx->setEnabled(false);
     ui->crlfBox->setEnabled(false);
@@ -748,76 +769,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         emit sig_answer_clicked();
     }
 }
+//------------------------------------------------------------------------------------
+
 //**************************************************************************************
-//                            Tray
 //**************************************************************************************
-/*
-void MainWindow::showTrayIcon()
-{
-    trayIcon = new QSystemTrayIcon(this);
-    QIcon trayImage(main_pic);
-    trayIcon->setIcon(trayImage);
-    trayIcon->setContextMenu(trayIconMenu);
-
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-                this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-
-    trayIcon->show();
-    trayIcon->setToolTip("hexSerial");
-}
-//-------------------------------------------------------------------------------------
-void MainWindow::trayActionExecute()
-{
-    //QMessageBox::information(this, "TrayIcon", "Тестовое сообщение. Замените вызов этого сообщения своим кодом.");
-}
-//-------------------------------------------------------------------------------------
-void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    switch (static_cast<int>(reason)) {
-        case QSystemTrayIcon::Trigger:
-        case QSystemTrayIcon::DoubleClick:
-            this->showNormal();
-        break;
-    }
-}
-//-------------------------------------------------------------------------------------
-void MainWindow::setTrayIconActions()
-{
-    minA  = new QAction(QIcon(hide_pic), "Hide", this);
-    maxA  = new QAction(QIcon(show_pic), "Show", this);
-    quitA = new QAction(QIcon(close_pic),"Quit", this);
-
-
-    connect(minA, SIGNAL(triggered()),  this, SLOT(hide()));
-    connect(maxA, SIGNAL(triggered()),  this, SLOT(showNormal()));
-    connect(quitA, SIGNAL(triggered()), qApp, SLOT(quit()));
-
-    trayIconMenu = new QMenu(this);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(minA);
-    trayIconMenu->addAction(maxA);
-    trayIconMenu->addAction(quitA);
-    //trayIconMenu->setStyleSheet(QString::fromUtf8("background-color: rgb(100, 100, 100);"));
-}
-//-------------------------------------------------------------------------------------
-void MainWindow::changeEvent(QEvent *event)
-{
-    QMainWindow::changeEvent(event);
-    if (event->type() == QEvent::WindowStateChange) {
-        if (isMinimized()) this->hide();
-    }
-}
-//-------------------------------------------------------------------------------------
-void MainWindow::closeEvent(QCloseEvent *evt)
-{
-    if (trayIcon->isVisible()) {
-        this->hide();
-        evt->ignore();
-    }
-}
-*/
 //**************************************************************************************
-//-----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
 //  Функции для установки временных интервалов , а также их проверки
 //
 uint32_t MainWindow::get10ms()
@@ -834,7 +792,6 @@ int MainWindow::check_tmr(uint32_t tm)
 {
     return (get10ms() >= tm ? 1 : 0);
 }
-//----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //  Функция записывает заданное количество байт в файл (в асинхронном режиме для win32)
 //
@@ -904,8 +861,6 @@ void MainWindow::compApi()
 //--------------------------------------------------------------------------------
 void MainWindow::crc32File()
 {
-    //if (!sdev) return;
-
     initList();
     mode = crcCmd;
     emit sig_mkList(mode);

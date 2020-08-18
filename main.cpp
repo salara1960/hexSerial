@@ -18,11 +18,10 @@ QString errStr = "", cerrStr;
         QLocale loc(QLocale::Russian, QLocale::RussianFederation);
         QLocale::setDefault(loc);
 
-        //QApplication::setDesktopSettingsAware(false);
         QApplication app(argc, argv);
 
         QLockFile lockFile(QDir::temp().absoluteFilePath("hexSerial.lock"));
-        if (!lockFile.tryLock(100)){
+        if (!lockFile.tryLock(100)) {
             QMessageBox::warning(nullptr, "Attention !!!", "Program is already running");
 
             return 1;
