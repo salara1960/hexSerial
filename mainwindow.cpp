@@ -717,9 +717,8 @@ int ix = -1;
                 if ((pos = line.indexOf("\r\n", 0)) != -1) line.remove(pos, 2);
             }
             LogSave(nullptr, line, false);
-            if (rxData.length() > (ix + 1)) rxData.remove(0, ix);
+            if (rxData.length() >= (ix + 1)) rxData.remove(0, ix);
                                        else rxData.clear();
-        //} else {
             if (cmd != noneCmd) {
                 memcpy(ibuff, rxData.data(), rxData.length());
                 ibuff_len = rxData.length();
