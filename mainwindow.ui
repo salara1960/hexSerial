@@ -177,7 +177,7 @@ background-color:rgb(206, 206, 206)}</string>
      <widget class="QTextEdit" name="log">
       <property name="font">
        <font>
-        <family>Sans Serif</family>
+        <family>Cousine</family>
         <pointsize>10</pointsize>
         <italic>false</italic>
        </font>

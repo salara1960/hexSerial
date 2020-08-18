@@ -115,11 +115,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->setWindowOpacity(0.90);//set the level of transparency
 
-    /*
-    this->setTrayIconActions();
-    this->showTrayIcon();
-    */
-
     first  = true;
     con = false;
     sdevName = "";
