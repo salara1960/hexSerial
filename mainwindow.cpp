@@ -3,8 +3,6 @@
 #include "settingsdialog.h"
 #include "itDialog.h"
 
-
-
 //******************************************************************************************************
 //
 //       hex Serial Terminal
@@ -35,8 +33,6 @@
 //const QString vers = "1.7";//14.08.2020
 const QString vers = "1.8";//18.08.2020
 
-
-
 const QString title = "SerialTerminal";
 
 const QString main_pic    = "png/main.png";
@@ -48,8 +44,6 @@ const QString salara_pic  = "png/salara.png";
 const QString close_pic   = "png/close.png";
 
 const QByteArray cr_lf = "\r\n";
-
-
 
 
 //  Макрос для промежуточного подсчета контрольной суммы CRC32
@@ -94,9 +88,6 @@ static const uint32_t crc32_tab[256] = {
 0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf,
 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
-
-
-
 
 //******************************************************************************************************
 
@@ -226,17 +217,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 MainWindow::~MainWindow()
 {
     deinitSerial();
-    if (conf) delete conf;
-    if (keys) delete keys;
-    if (pTmp) free(pTmp);
+    delete conf;
+    delete keys;
 
-    if (apiBuf.data) delete apiBuf.data;
+    if (pTmp) {
+        free(pTmp);
+    }
+
+    delete apiBuf.data;
 
     killTimer(tmr_sec);
     delete ui;
 }
 //--------------------------------------------------------------------------------
-void MainWindow::KeyProg(QString str)
+void MainWindow::KeyProg(const QString& str)
 {
     if (keyId < keyCnt) {
         if (str.length()) {
@@ -250,6 +244,7 @@ void MainWindow::KeyProg(QString str)
     }
     if (keys) { delete keys; keys = nullptr; }
 }
+
 //--------------------------------------------------------------------------------
 void MainWindow::slotButtonData()
 {
@@ -299,7 +294,7 @@ int8_t ret = 0;
     if (!buf) return ret;
 
     char num[4] = {0};
-    char *uki = NULL;
+    char *uki = nullptr;
     char *uk = (char *)(buf + API_VERSION_OFFSET);// 0x12e90 //строка "api_version:3.6" (3-мажор, 6-минор)
 
     uki = strstr(uk, API_VERSION_STRING);
@@ -329,7 +324,7 @@ int8_t ret = 0;
 //--------------------------------------------------------------------------------
 void MainWindow::getFile()
 {
-    QString *nm = new QString();
+    auto *nm = new QString();
     *nm = QFileDialog::getOpenFileName(this, tr("Open file"), nullptr, tr("Files (*.*)"));
     if (!nm->size()) {
         ui->status->clear();
@@ -352,7 +347,7 @@ void MainWindow::getFile()
                 ui->status->setText("Error readinf file " + *nm);
             } else {
                 fileName.clear();
-                fileName.append(*nm);
+                fileName.append(nm->toLocal8Bit());
                 crcFile = crc32(0, pTmp, fileSize);
                 int8_t rt = getApiVer(pTmp);
                 ui->status->clear();
@@ -585,7 +580,7 @@ void MainWindow::keyPrs()
     if (key != -1) {
         if (sdev) {
             cmd = noneCmd;
-            QByteArray m; m.append(keyArr[key]);
+            QByteArray m; m.append(keyArr[key].toLocal8Bit());
             emit sigWrite(m);
         } else {
             keyId = key;
@@ -712,8 +707,12 @@ int ix = -1;
                 if ((pos = line.indexOf("\r\n", 0)) != -1) line.remove(pos, 2);
             }
             LogSave(nullptr, line, false);
-            if (rxData.length() >= (ix + 1)) rxData.remove(0, ix);
-                                       else rxData.clear();
+            if (rxData.length() >= (ix + 1)) {
+                rxData.remove(0, ix);
+            }
+            else {
+                rxData.clear();
+            }
             if (cmd != noneCmd) {
                 memcpy(ibuff, rxData.data(), rxData.length());
                 ibuff_len = rxData.length();
@@ -772,17 +771,17 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 //----------------------------------------------------------------------
 //  Функции для установки временных интервалов , а также их проверки
 //
-uint32_t MainWindow::get10ms()
+uint32_t MainWindow::get10ms() const
 {
     return ms10;
 }
 //
-uint32_t MainWindow::get_tmr(uint32_t tm)
+uint32_t MainWindow::get_tmr(uint32_t tm) const
 {
     return (get10ms() + tm);
 }
 //
-int MainWindow::check_tmr(uint32_t tm)
+int MainWindow::check_tmr(uint32_t tm) const
 {
     return (get10ms() >= tm ? 1 : 0);
 }
@@ -822,7 +821,8 @@ void MainWindow::initList()
     all_cmd_in_list = 0;
     cmd_list.clear();
     mode = noneCmd;
-    if (apiBuf.data) delete apiBuf.data;
+
+    delete apiBuf.data;
     apiBuf.len = 0;
 }
 //--------------------------------------------------------------------------------
@@ -862,9 +862,9 @@ void MainWindow::crc32File()
 //--------------------------------------------------------------------------------
 void MainWindow::qstr(const char *buf, uint16_t len, QString *out)
 {
-QString ms;
-char *uk = (char *)buf;
-uint16_t i = 0;
+    QString ms;
+    char *uk = (char *)buf;
+    uint16_t i = 0;
 
     while (i < len) {
         ms.sprintf(" %02X", *uk++);
@@ -879,11 +879,11 @@ void MainWindow::prnFrame(const uint8_t *buf, uint16_t len, QString *st, record_
 {
     if (!buf || !st) return;
 
-    cmd_hdr_t *frame = (cmd_hdr_t *)buf;
+    auto *frame = (cmd_hdr_t *)buf;
     uint16_t sz = sizeof(cmd_hdr_t);
 
     QString stx, ms;
-    QByteArray bt; bt.append(all_mode[rc->cmd]);
+    QByteArray bt; bt.append(all_mode[rc->cmd].toLocal8Bit());
     stx.sprintf("Frame(%u):'%s'\n\tper_rzv:0x%02X%02X\n\tsn:0x%04X\n"
                 "\thd:0x%02X\n\t\trw:%u inc:%u text:%u rst:%u addr_ext:%u ld:%u\n",
                 rc->cmd, bt.data(), frame->pre, frame->rzv, frame->sn,
@@ -1063,11 +1063,11 @@ void MainWindow::parseAck(void *in, int len, char *st, record_t *rc)
 {
     if (!len || !in) return;
 
-    uint8_t *uk = (uint8_t *)in;
+    auto *uk = (uint8_t *)in;
 
     if (patch) uk++;// убрать паразитный байт после команды "рестарт"
 
-    ack_hdr_t *ack = (ack_hdr_t *)uk;
+    auto *ack = (ack_hdr_t *)uk;
     uint8_t crc = *(uint8_t *)(uk + len - 1);
     int tp = 0;
     uint8_t cd = rc->cmd;
@@ -1081,7 +1081,7 @@ void MainWindow::parseAck(void *in, int len, char *st, record_t *rc)
     //serNum = ack->sn;
     devErr = ack->err.res;
     //
-    uint8_t *data = (uint8_t *)(uk + sizeof(ack_hdr_t));
+    auto *data = (uint8_t *)(uk + sizeof(ack_hdr_t));
     uint32_t dl = 0;
     uint32_t data_len = len - sizeof(ack_hdr_t) - 1;
     uint32_t dw = 0, sz = sizeof(uint32_t);
@@ -1229,10 +1229,10 @@ void MainWindow::parseAck(void *in, int len, char *st, record_t *rc)
 //
 uint16_t MainWindow::mkFrame(uint8_t cmd, uint32_t addr, uint8_t len, uint8_t *in, uint8_t *out, int *ack_len)
 {
-uint16_t ret = 0;
-cmd_hdr_t hd;
-uint8_t crc = 0;
-int alen = 5;
+    uint16_t ret = 0;
+    cmd_hdr_t hd;
+    uint8_t crc = 0;
+    int alen = 5;
 
     memset((uint8_t *)&hd, 0, sizeof(cmd_hdr_t));
     hd.pre = 0xAA;
@@ -1366,9 +1366,9 @@ void MainWindow::addToList(record_t *rc, uint8_t fin)
 //
 int8_t MainWindow::mkList(uint8_t cmd)
 {
-cmd_list_ind = -1;
-total_cmd_list = 0;
-record_t rec;
+    cmd_list_ind = -1;
+    total_cmd_list = 0;
+    record_t rec;
 
     memset((uint8_t *)&rec, 0, sizeof(record_t));
     rec.data = nullptr;

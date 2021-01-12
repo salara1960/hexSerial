@@ -1,11 +1,10 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
-#include <inttypes.h>
+#include <cinttypes>
 #include <iostream>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
+#include <ctime>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 
 #ifdef __WIN32
@@ -40,9 +39,7 @@
 #include <QIODevice>
 
 
-
 //********************************************************************************
-
 
 #define SET_DEBUG
 #define SET_MOUSE_KEY
@@ -225,48 +222,47 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-
     class TheError {
         public :
             int code;
-            TheError(int);
+            explicit TheError(int);
     };
 
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-    void timerEvent(QTimerEvent *event);
+    ~MainWindow() override;
+
+    void timerEvent(QTimerEvent *event) override;
     int chkDone(QByteArray *buf);
 
 #ifdef SET_MOUSE_KEY
 protected:
-    virtual void mousePressEvent(QMouseEvent *);
-    virtual void keyPressEvent(QKeyEvent *);
+    void mousePressEvent(QMouseEvent *) override;
+    void keyPressEvent(QKeyEvent *) override;
 #endif
 
 public slots:
-
     void slotButtonData();
-    void KeyProg(QString);
+    void KeyProg(const QString&);
     int initSerial();
-    uint32_t crc32(const uint32_t crc_origin, const uint8_t *buf, const uint32_t size);
+    static uint32_t crc32(uint32_t crc_origin, const uint8_t *buf, uint32_t size);
     void deinitSerial();
     void LogSave(const char *, QByteArray &, bool);
     void LogSave(const char *, const QString &, bool);
     void About();
-    unsigned char myhextobin(const char *);
+    static unsigned char myhextobin(const char *);
     void hexTobin(const char *, QByteArray *);
     void clrLog();
     //
     int8_t getApiVer(const uint8_t *buf);
-    void qstr(const char *buf, uint16_t len, QString *out);
+    static void qstr(const char *buf, uint16_t len, QString *out);
     int writes(const char *data, int len);
-    uint32_t get10ms();
-    uint32_t get_tmr(uint32_t);
-    int check_tmr(uint32_t);
+    uint32_t get10ms() const;
+    uint32_t get_tmr(uint32_t) const;
+    int check_tmr(uint32_t) const;
     void initList();
-    uint8_t crc8(const uint8_t *uk, uint16_t bytes);
+    static uint8_t crc8(const uint8_t *uk, uint16_t bytes);
     const char *errStr(uint8_t err);
-    bool check_apiPresent(apiHdrData_t *hdr);
+    static bool check_apiPresent(apiHdrData_t *hdr);
     void parseAck(void *in, int len, char *st, record_t *rc);
     uint16_t mkFrame(uint8_t cmd, uint32_t addr, uint8_t len, uint8_t *in, uint8_t *out, int *ack_len);
     void addToList(record_t *rc, uint8_t fin);
@@ -437,7 +433,4 @@ private:
     const QByteArray to_bin = "#082;bin\r\n";
     const QString all_mode[MAX_MODE] = {"crc", "read", "write", "get", "put", "boot", "rst", "text", "download", "compare", "prog", "stop", "start", "bin"};
     const char *all_dev_type[MAX_ALL_DEV_TYPE] = {"svm", "svp", "noname"};
-
 };
-
-#endif // MAINWINDOW_H

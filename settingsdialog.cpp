@@ -76,7 +76,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             this, &SettingsDialog::apply);
     connect(m_ui->serialPortInfoListBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::showPortInfo);
-    connect(m_ui->baudRateBox,  QOverload<int>::of(&QComboBox::currentIndexChanged),
+    connect(m_ui->baudRateBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::checkCustomBaudRatePolicy);
     connect(m_ui->serialPortInfoListBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::checkCustomDevicePathPolicy);

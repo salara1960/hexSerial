@@ -1,5 +1,4 @@
-#ifndef ITDIALOG_H
-#define ITDIALOG_H
+#pragma once
 
 #include <QtWidgets/QDialog>
 #include <QString>
@@ -17,7 +16,7 @@ class pwdDialog : public QDialog
     Q_OBJECT
 public:
     explicit pwdDialog(QWidget *parent = nullptr, QString = "", QString = "");
-    ~pwdDialog();
+    ~pwdDialog() override;
 
 signals:
     void DoneW(QString);
@@ -32,5 +31,3 @@ public slots:
 };
 
 //-----------------------------------------------------------------
-
-#endif // ITDIALOG_H

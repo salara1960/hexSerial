@@ -1,20 +1,15 @@
 #include "mainwindow.h"
+
 #include <QApplication>
 #include <QLockFile>
 #include <QDir>
 #include <QMessageBox>
 
-
 int main(int argc, char *argv[])
 {
-int cerr = 0;
-QString errStr = "", cerrStr;
-
-
-    setlocale(LC_ALL,"UTF8");
+    setlocale(LC_ALL, "UTF8");
 
     try {
-
         QLocale loc(QLocale::Russian, QLocale::RussianFederation);
         QLocale::setDefault(loc);
 
@@ -35,21 +30,27 @@ QString errStr = "", cerrStr;
     }
 
     catch (MainWindow::TheError(er)) {
-        cerr = er.code;
-        cerrStr.sprintf("%d", cerr);
-        if (cerr > 0) {
-            if (cerr & 1) errStr.append("Error create serial port object (" + cerrStr + ")\n");
-            if (cerr & 2) errStr.append("Error starting timer_wait_data (" + cerrStr + ")\n");
-            if (cerr & 4) errStr.append("Error create settings object\n");
-            if (cerr & 8) errStr.append("Error reading from serial port\n");
-        } else errStr.append("Unknown Error (" + cerrStr + ")\n");
-        if (errStr.length() > 0) perror(reinterpret_cast<char *>(cerrStr.data()));
+        auto errorCode = er.code;
+        QString errorCodeStr(errorCode);
+        QString errorStr = "";
+        if (errorCode > 0) {
+            if (errorCode & 1) errorStr.append("Error create serial port object (" + errorCodeStr + ")\n");
+            if (errorCode & 2) errorStr.append("Error starting timer_wait_data (" + errorCodeStr + ")\n");
+            if (errorCode & 4) errorStr.append("Error create settings object\n");
+            if (errorCode & 8) errorStr.append("Error reading from serial port\n");
+        }
+        else {
+            errorStr.append("Unknown Error (" + errorCodeStr + ")\n");
+        }
 
-        return cerr;
+        if (errorStr.length() > 0) {
+            perror(reinterpret_cast<char *>(errorCodeStr.data()));
+        }
+
+        return errorCode;
     }
     catch (std::bad_alloc) {
         perror("Error while alloc memory via call function new\n");
-
         return -1;
     }
 
