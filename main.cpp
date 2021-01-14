@@ -7,9 +7,6 @@
 
 int main(int argc, char *argv[])
 {
-int cerr = 0;
-QString errStr = "", cerrStr;
-
 
     setlocale(LC_ALL,"UTF8");
 
@@ -35,7 +32,9 @@ QString errStr = "", cerrStr;
     }
 
     catch (MainWindow::TheError(er)) {
-        cerr = er.code;
+        int cerr = er.code;
+        QString errStr = "";
+        QString cerrStr;
         cerrStr.sprintf("%d", cerr);
         if (cerr > 0) {
             if (cerr & 1) errStr.append("Error create serial port object (" + cerrStr + ")\n");

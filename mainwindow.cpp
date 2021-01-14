@@ -27,7 +27,8 @@
 //const QString vers = "0.9";//08.03.2020
 //const QString vers = "1.0";//08.03.2020
 //const QString vers = "1.1";//18.06.2020
-const QString vers = "1.2";//10.07.2020
+//const QString vers = "1.2";//10.07.2020
+const QString vers = "1.3";//14.01.2021
 
 
 
@@ -542,6 +543,13 @@ void MainWindow::timerEvent(QTimerEvent *event)
                     ctimka->tm_sec);
         setWindowTitle(title +" ver. " + vers + "  |  " + dt);
     }
+}
+//-------------------------------------------------------------------------------------
+//   Обработчик события - "нажата клавиша Enter на клавиатуре"
+//
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Return) on_answer_clicked();
 }
 //-----------------------------------------------------------------------
 bool MainWindow::chkDone(QByteArray *buf)

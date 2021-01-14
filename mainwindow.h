@@ -112,12 +112,15 @@ public:
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void timerEvent(QTimerEvent *event);
+
     bool chkDone(QByteArray *buf);
 
-#ifdef SET_MOUSE_KEY
+
 protected:
-    virtual void mousePressEvent(QMouseEvent *);
+    virtual void timerEvent(QTimerEvent *event) override;
+    virtual void keyPressEvent(QKeyEvent *) override;
+#ifdef SET_MOUSE_KEY
+    virtual void mousePressEvent(QMouseEvent *) override;
 #endif
 
 public slots:
